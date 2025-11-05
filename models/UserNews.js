@@ -10,10 +10,13 @@ const userNewsSchema = new mongoose.Schema({
     required: true,
   },
   likes: { type: Number, default: 0 },
-  commented_news: {
-    type: [String],
-    default: [],
-  },
+  comments: [
+    {
+      _id: { type: mongoose.Schema.Types.ObjectId, auto: true },
+      comment: { type: String, required: true },
+      timestamp: { type: Date, default: Date.now }
+    }
+  ],
 });
 
 module.exports = mongoose.model("UserNews", userNewsSchema);

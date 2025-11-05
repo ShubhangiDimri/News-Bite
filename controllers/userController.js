@@ -1,3 +1,5 @@
+const mongoose = require('mongoose')
+
 const News = require('../models/News')
 const UserNews = require('../models/UserNews')
 const User = require('../models/User')
@@ -14,7 +16,6 @@ exports.comment = async (req, res) => {
         if (!username) {
             return res.status(404).json({ message: 'User not found' });
         }
-        console.log("Comment by user:", username);
     } catch (error) {
         return res.status(500).json({ message: 'Server error', error: error.message });
     }
@@ -23,27 +24,59 @@ exports.comment = async (req, res) => {
     // Logic: save comment to db with username and newsId in UserNews. Update comment in News model as well
     //Check if username, newsId exists in UserNews
     try {
-        let userNews = await UserNews.findOne({ username, news_id: newsId });
-        if (!userNews) {
-            // Create new entry
-            userNews = new UserNews({ username, news_id: newsId, commented_news: [comment] });
-        } else {
-            // Update existing entry
-            userNews.commented_news.push(comment);
-        }
-        await userNews.save();
+    let userNews = await UserNews.findOne({ username, news_id: newsId });
+    const commentId = new mongoose.Types.ObjectId(); // 🔹 same ID for both comments
 
-        const newsItem = await News.findOne({ news_id: newsId });
-        if (newsItem) {
-            newsItem.comments.push({ username, comment });
-            await newsItem.save();
-        }
-
-        res.status(200).json({ message: 'Comment added successfully' });
-    } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+    if (!userNews) {
+        userNews = new UserNews({
+        username,
+        news_id: newsId,
+        comments: [{ _id: commentId, comment }]
+        });
+    } else {
+        userNews.comments.push({ _id: commentId, comment });
     }
+    await userNews.save();
+
+    const newsItem = await News.findOne({ news_id: newsId });
+    if (newsItem) {
+        newsItem.comments.push({ _id: commentId, username, comment });
+        await newsItem.save();
+    }
+
+    res.status(200).json({ message: 'Comment added successfully', commentId });
+    } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+    }
+
 }
+
+exports.deleteComment = async (req, res) => {
+  const { commentId, newsId } = req.body;
+
+  try {
+    // Remove from News collection
+    const newsResult = await News.updateOne(
+      { news_id: newsId },
+      { $pull: { comments: { _id: commentId } } }
+    );
+
+    // Remove from UserNews collection
+    const userNewsResult = await UserNews.updateOne(
+      { news_id: newsId },
+      { $pull: { comments: { _id: commentId } } }
+    );
+
+    // Check if comment existed in at least one place
+    if (newsResult.modifiedCount === 0 && userNewsResult.modifiedCount === 0) {
+      return res.status(404).json({ message: 'Comment not found' });
+    }
+
+    res.status(200).json({ message: 'Comment deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
 
 exports.like = async (req, res) => {
   const { newsId } = req.body;

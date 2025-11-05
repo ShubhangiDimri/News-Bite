@@ -36,6 +36,7 @@ const newsSchema = new mongoose.Schema({
   likes: { type: Number, default: 0 },
   comments: [
     {
+      _id: { type: mongoose.Schema.Types.ObjectId, auto: true },
       username: { type: String, required: true },
       comment: { type: String, required: true },
       timestamp: { type: Date, default: Date.now }
