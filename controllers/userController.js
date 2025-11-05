@@ -111,3 +111,34 @@ exports.like = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
+exports.activity = async (req, res) => {
+    // Input : none (get from req.user)
+    const user = req.user;
+
+    //get username from db
+    let username = "";
+    try {
+        const userData = await User.findById(user.userId).select('username');
+        username = userData.username;
+        if (!username) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+    } catch (error) {
+        return res.status(500).json({ message: 'Server error', error: error.message });
+    }
+
+    // Logic: fetch comments and liked news from UserNews
+    try {
+        const userNews = await UserNews.find({ username });
+
+        if (!userNews || userNews.length === 0) {
+            return res.status(404).json({ message: 'No activity found for user' });
+        }
+
+        res.status(200).json({ activity: userNews });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+    
+}

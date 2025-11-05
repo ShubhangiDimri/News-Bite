@@ -5,7 +5,6 @@ const connectDB = require("./database/DatabaseConnection");
 const authRoutes = require('./routes/authRoutes')
 const newsRoutes = require('./routes/newsRoutes')
 const userRoutes = require('./routes/userRoutes')
-const { startNewsScheduler } = require('./services/newsFetcher')
 const app = express();
 
 const PORT = process.env.PORT || 5000;
@@ -22,8 +21,6 @@ app.use('/api/auth',authRoutes)
 app.use('/api/news',newsRoutes)
 app.use('/api/user', userRoutes)
 
-// start periodic news fetching every 5 minutes
-startNewsScheduler(5)
 
 app.listen(PORT, () => {
   console.log(` Server running on http://localhost:${PORT}`);
