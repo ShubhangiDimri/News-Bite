@@ -1,21 +1,26 @@
 const mongoose = require("mongoose");
+const { sanitizeText } = require("../utils/sanitizer");
 
 const News = require("../models/News");
 const UserNews = require("../models/UserNews");
 const User = require("../models/User");
 
 exports.comment = async (req, res) => {
-  // Input : Comment, newsId
+  // Input validation
   const { comment, newsId } = req.body;
+  
+  if (!comment || !newsId) {
+    return res.status(400).json({ 
+      message: "Validation failed", 
+      error: {
+        comment: !comment ? "Comment is required" : undefined,
+        newsId: !newsId ? "NewsId is required" : undefined
+      }
+    });
+  }
 
-  // Validate input using regex list
-    const vulgarWords = ["badword1", "badword2", "badword3"]; // Add more words as needed
-    const vulgarRegex = new RegExp(`\\b(${vulgarWords.join("|")})\\b`, "i");
-    if (vulgarRegex.test(comment)) {
-      return res
-        .status(400)
-        .json({ message: "Comment contains inappropriate language" });
-    }
+  // Sanitize the comment
+  const sanitized = sanitizeText(comment || "");
 
   // Get username from database using req.user info from authMiddleware
   let username = "";
@@ -37,24 +42,47 @@ exports.comment = async (req, res) => {
     let userNews = await UserNews.findOne({ username, news_id: newsId });
     const commentId = new mongoose.Types.ObjectId(); // 🔹 same ID for both comments
 
+    const commentData = {
+      _id: commentId,
+      comment: sanitized.text || comment,     // ensure comment field is always set
+      originalText: comment,                  // store original comment
+      wasCensored: sanitized.wasCensored,
+      censoredTerms: sanitized.censoredTerms || [],
+      status: sanitized.status || 'visible'
+    };
+
     if (!userNews) {
       userNews = new UserNews({
         username,
         news_id: newsId,
-        comments: [{ _id: commentId, comment }],
+        comments: [commentData],
       });
     } else {
-      userNews.comments.push({ _id: commentId, comment });
+      userNews.comments.push(commentData);
     }
     await userNews.save();
 
+    // Update News model
     const newsItem = await News.findOne({ news_id: newsId });
     if (newsItem) {
-      newsItem.comments.push({ _id: commentId, username, comment });
+      // For News model, always use the sanitized comment
+      newsItem.comments.push({ _id: commentId, username, comment: sanitized.text });
       await newsItem.save();
     }
 
-    res.status(200).json({ message: "Comment added successfully", commentId });
+    // Prepare response based on whether the comment was censored
+    if (sanitized.wasCensored) {
+      return res.status(200).json({
+        message: `Posted (masked ${sanitized.censoredTerms.length} term${sanitized.censoredTerms.length === 1 ? '' : 's'}).`,
+        comment: sanitized.text
+      });
+    } else {
+      // For clean comments, maintain the exact same response format as before
+      return res.status(200).json({ 
+        message: "Comment added successfully", 
+        commentId 
+      });
+    }
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
