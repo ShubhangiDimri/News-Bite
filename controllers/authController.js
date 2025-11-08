@@ -45,7 +45,7 @@ exports.login = async (req, res) => {
         logger.info(`Login attempt for username: ${username}`);
 
         if (!username || !password) {
-            logger.warn(`Login failed - Missing credentials`);
+            logger.error(`Login failed - Missing credentials`);
             return res.status(400).json({ message: "username or password required" })
         }
 
@@ -57,7 +57,7 @@ exports.login = async (req, res) => {
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            logger.warn(`Login failed - Invalid password for: ${username}`);
+            logger.error(`Login failed - Invalid password for: ${username}`);
             return res.status(401).json({ message: "Invalid credentials" });
         }
 
