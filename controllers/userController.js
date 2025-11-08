@@ -1,21 +1,26 @@
 const mongoose = require("mongoose");
+const { sanitizeText } = require("../utils/sanitizer");
 
 const News = require("../models/News");
 const UserNews = require("../models/UserNews");
 const User = require("../models/User");
 
 exports.comment = async (req, res) => {
-  // Input : Comment, newsId
+  // Input validation
   const { comment, newsId } = req.body;
+  
+  if (!comment || !newsId) {
+    return res.status(400).json({ 
+      message: "Validation failed", 
+      error: {
+        comment: !comment ? "Comment is required" : undefined,
+        newsId: !newsId ? "NewsId is required" : undefined
+      }
+    });
+  }
 
-  // Validate input using regex list
-    const vulgarWords = ["badword1", "badword2", "badword3"]; // Add more words as needed
-    const vulgarRegex = new RegExp(`\\b(${vulgarWords.join("|")})\\b`, "i");
-    if (vulgarRegex.test(comment)) {
-      return res
-        .status(400)
-        .json({ message: "Comment contains inappropriate language" });
-    }
+  // Sanitize the comment
+  const sanitized = sanitizeText(comment || "");
 
   // Get username from database using req.user info from authMiddleware
   let username = "";
@@ -37,24 +42,47 @@ exports.comment = async (req, res) => {
     let userNews = await UserNews.findOne({ username, news_id: newsId });
     const commentId = new mongoose.Types.ObjectId(); // 🔹 same ID for both comments
 
+    const commentData = {
+      _id: commentId,
+      comment: sanitized.text || comment,     // ensure comment field is always set
+      originalText: comment,                  // store original comment
+      wasCensored: sanitized.wasCensored,
+      censoredTerms: sanitized.censoredTerms || [],
+      status: sanitized.status || 'visible'
+    };
+
     if (!userNews) {
       userNews = new UserNews({
         username,
         news_id: newsId,
-        comments: [{ _id: commentId, comment }],
+        comments: [commentData],
       });
     } else {
-      userNews.comments.push({ _id: commentId, comment });
+      userNews.comments.push(commentData);
     }
     await userNews.save();
 
+    // Update News model
     const newsItem = await News.findOne({ news_id: newsId });
     if (newsItem) {
-      newsItem.comments.push({ _id: commentId, username, comment });
+      // For News model, always use the sanitized comment
+      newsItem.comments.push({ _id: commentId, username, comment: sanitized.text });
       await newsItem.save();
     }
 
-    res.status(200).json({ message: "Comment added successfully", commentId });
+    // Prepare response based on whether the comment was censored
+    if (sanitized.wasCensored) {
+      return res.status(200).json({
+        message: `Posted (masked ${sanitized.censoredTerms.length} term${sanitized.censoredTerms.length === 1 ? '' : 's'}).`,
+        comment: sanitized.text
+      });
+    } else {
+      // For clean comments, maintain the exact same response format as before
+      return res.status(200).json({ 
+        message: "Comment added successfully", 
+        commentId 
+      });
+    }
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
@@ -84,6 +112,197 @@ exports.deleteComment = async (req, res) => {
     res.status(200).json({ message: "Comment deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// Handle voting on comments or replies
+async function handleVote(type, userId, voteType, itemId, replyId = null) {
+  const userNews = await UserNews.findOne({
+    'comments._id': itemId
+  });
+
+  if (!userNews) {
+    throw new Error('Comment not found');
+  }
+
+  let target = userNews.comments.id(itemId);
+  if (replyId) {
+    target = target.replies.id(replyId);
+    if (!target) {
+      throw new Error('Reply not found');
+    }
+  }
+
+  // Remove any existing votes by this user
+  target.upvotes = target.upvotes.filter(id => !id.equals(userId));
+  target.downvotes = target.downvotes.filter(id => !id.equals(userId));
+
+  // Add new vote unless it's the same as removed (toggle off)
+  if (voteType === 'up') {
+    target.upvotes.push(userId);
+  } else if (voteType === 'down') {
+    target.downvotes.push(userId);
+  }
+
+  // Update score
+  target.score = target.upvotes.length - target.downvotes.length;
+
+  await userNews.save();
+  return target;
+}
+
+exports.addReply = async (req, res) => {
+  const { commentId } = req.params;
+  const { comment } = req.body;
+  
+  if (!comment) {
+    return res.status(400).json({ 
+      message: "Reply text is required"
+    });
+  }
+
+  try {
+    const user = await User.findById(req.user.userId).select("username");
+    if (!user?.username) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Find the parent comment
+    const userNews = await UserNews.findOne({
+      'comments._id': commentId
+    });
+
+    if (!userNews) {
+      return res.status(404).json({ message: "Comment not found" });
+    }
+
+    // Sanitize the reply text
+    const sanitized = sanitizeText(comment);
+
+    const replyData = {
+      _id: new mongoose.Types.ObjectId(),
+      userId: req.user.userId,
+      username: user.username,
+      comment: sanitized.text || comment,
+      originalText: comment,
+      wasCensored: sanitized.wasCensored,
+      censoredTerms: sanitized.censoredTerms || [],
+      status: sanitized.status || 'visible'
+    };
+
+    // Add reply to the comment
+    const parentComment = userNews.comments.id(commentId);
+    parentComment.replies.push(replyData);
+    await userNews.save();
+
+    // Prepare response based on whether the reply was censored
+    if (sanitized.wasCensored) {
+      return res.status(200).json({
+        message: `Reply posted (masked ${sanitized.censoredTerms.length} term${sanitized.censoredTerms.length === 1 ? '' : 's'}).`,
+        reply: sanitized.text
+      });
+    } else {
+      return res.status(200).json({ 
+        message: "Reply added successfully",
+        replyId: replyData._id 
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+exports.deleteReply = async (req, res) => {
+  const { commentId, replyId } = req.params;
+
+  try {
+    const result = await UserNews.updateOne(
+      { 'comments._id': commentId },
+      { 
+        $pull: { 
+          'comments.$.replies': { _id: replyId, userId: req.user.userId }
+        }
+      }
+    );
+
+    if (result.modifiedCount === 0) {
+      return res.status(404).json({ message: "Reply not found or unauthorized" });
+    }
+
+    res.status(200).json({ message: "Reply deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+exports.getReplies = async (req, res) => {
+  const { commentId } = req.params;
+  const { page = 1, limit = 10 } = req.query;
+
+  try {
+    const userNews = await UserNews.findOne(
+      { 'comments._id': commentId },
+      { 'comments.$': 1 }
+    );
+
+    if (!userNews || !userNews.comments[0]) {
+      return res.status(404).json({ message: "Comment not found" });
+    }
+
+    const replies = userNews.comments[0].replies;
+    const start = (page - 1) * limit;
+    const paginatedReplies = replies.slice(start, start + limit);
+
+    res.status(200).json({
+      replies: paginatedReplies,
+      total: replies.length,
+      page: parseInt(page),
+      totalPages: Math.ceil(replies.length / limit)
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+exports.voteComment = async (req, res) => {
+  const { commentId } = req.params;
+  const { voteType } = req.body;
+
+  if (!['up', 'down'].includes(voteType)) {
+    return res.status(400).json({ message: "Invalid vote type" });
+  }
+
+  try {
+    const result = await handleVote('comment', req.user.userId, voteType, commentId);
+    res.status(200).json({ 
+      message: "Vote recorded",
+      score: result.score,
+      upvotes: result.upvotes.length,
+      downvotes: result.downvotes.length
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.voteReply = async (req, res) => {
+  const { commentId, replyId } = req.params;
+  const { voteType } = req.body;
+
+  if (!['up', 'down'].includes(voteType)) {
+    return res.status(400).json({ message: "Invalid vote type" });
+  }
+
+  try {
+    const result = await handleVote('reply', req.user.userId, voteType, commentId, replyId);
+    res.status(200).json({ 
+      message: "Vote recorded",
+      score: result.score,
+      upvotes: result.upvotes.length,
+      downvotes: result.downvotes.length
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
 
