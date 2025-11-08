@@ -520,3 +520,49 @@ exports.searchNews = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+
+
+
+//BOOKMARK
+// Toggle bookmark
+exports.toggleBookmark = async (req, res) => {
+  const { username, news_id } = req.body;
+
+  try {
+    let entry = await UserNews.findOne({ username, news_id });
+
+    if (entry) {
+      entry.bookmarked = !entry.bookmarked;
+      await entry.save();
+    } else {
+      entry = new UserNews({ username, news_id, bookmarked: true });
+      await entry.save();
+    }
+
+    res.status(200).json({ message: "Bookmark updated", bookmarked: entry.bookmarked });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Get all bookmarked news with full news details
+exports.getBookmarkedNews = async (req, res) => {
+  try {
+    const bookmarked = await UserNews.find({
+      username: req.params.username,
+      bookmarked: true,
+    });
+
+    const newsDetails = await Promise.all(
+      bookmarked.map(async (item) => {
+        const news = await News.findOne({ news_id: item.news_id });
+        return { ...item._doc, news };
+      })
+    );
+
+    res.status(200).json(newsDetails);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
