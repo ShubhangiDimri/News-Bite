@@ -1,11 +1,11 @@
 const express = require("express");
-const {comment, like, activity, deleteComment, searchNews, viewProfile,editProfile} = require("../controllers/userController");
+const {comment, like, activity, deleteComment, searchNews, viewProfile,editProfile,toggleBookmark, getBookmarkedNews} = require("../controllers/userController");
 const authMiddleware = require("../middlewares/authMiddleware");
 
 const router = express.Router();
 
 
-// Existing routes
+// Existing routes      
 router.post("/comment", authMiddleware, comment);
 router.post("/like", authMiddleware, like);
 router.post("/activity", authMiddleware, activity);
@@ -24,4 +24,11 @@ router.post("/comments/:commentId/replies/:replyId/vote", authMiddleware, requir
 router.get("/viewProfile", viewProfile);
 router.get("/search", searchNews);
 
+//Bookmark routes
+router.post("/bookmark", authMiddleware, toggleBookmark);
+router.get("/bookmarks/:username", authMiddleware, getBookmarkedNews);
+
 module.exports = router;
+
+
+

@@ -45,6 +45,7 @@ const userNewsSchema = new mongoose.Schema({
     required: true,
   },
   likes: { type: Number, default: 0 },
+  bookmarked: { type: Boolean, default: false },   //bookmarks
   comments: [commentSchema],
 });
 
