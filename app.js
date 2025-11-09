@@ -5,7 +5,7 @@ const connectDB = require("./database/DatabaseConnection");
 const authRoutes = require('./routes/authRoutes')
 const newsRoutes = require('./routes/newsRoutes')
 const userRoutes = require('./routes/userRoutes')
-const requestLogger = require('./middleware/requestLogger');
+const requestLogger = require('./middlewares/requestLogger');
 const app = express();
 
 const PORT = process.env.PORT || 5000;

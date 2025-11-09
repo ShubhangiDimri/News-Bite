@@ -5,31 +5,32 @@ const requestLogger = (req, res, next) => {
     const start = Date.now();
     req.id = uuidv4();
 
-    // Log request
-    logger.info({
+    // Log incoming request
+    logger.info(`--> ${req.method} ${req.path}`, {
         requestId: req.id,
-        method: req.method,
-        path: req.path,
         userId: req.user?.id || 'anonymous'
     });
 
-    // Log response
+    // Log response on finish
     res.on('finish', () => {
         const duration = Date.now() - start;
+        
+        const logMessage = `<-- ${req.method} ${req.path} ${res.statusCode} ${duration}ms`;
+
         if (duration > 1000) {
-            logger.warn({
+            logger.warn(logMessage, {
                 requestId: req.id,
-                message: 'Slow request detected',
-                duration: `${duration}ms`,
-                path: req.path
+                duration,
+                status: res.statusCode,
+                slow: true
+            });
+        } else {
+            logger.info(logMessage, {
+                requestId: req.id,
+                duration,
+                status: res.statusCode
             });
         }
-        
-        logger.info({
-            requestId: req.id,
-            status: res.statusCode,
-            duration: `${duration}ms`
-        });
     });
 
     next();

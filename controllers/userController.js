@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const { sanitizeText } = require("../utils/sanitizer");
-const logger = require("../utils/logger"); // Assuming logger is set up in utils/logger.js
+const logger = require("../utils/logging"); // Assuming logger is set up in utils/logger.js
 
 const News = require("../models/News");
 const UserNews = require("../models/UserNews");
@@ -9,7 +9,11 @@ const User = require("../models/User");
 exports.comment = async (req, res) => {
   const { comment, newsId } = req.body;
   
-  logger.info(`Comment attempt on news ${newsId}`);
+  logger.info('Comment attempt', {
+    newsId,
+    username: req.user?.username,
+    commentText: comment?.substring(0, 50) + (comment?.length > 50 ? '...' : '')
+  });
 
   if (!comment || !newsId) {
     logger.warn('Comment validation failed', {
@@ -420,6 +424,8 @@ exports.voteComment = async (req, res) => {
       downvotes: result.downvotes.length
     });
   } catch (error) {
+    // Add logging to the catch block
+    logger.error('VoteComment endpoint error', { error: error.message, stack: error.stack, commentId, voteType });
     res.status(500).json({ message: error.message });
   }
 };
@@ -441,17 +447,23 @@ exports.voteReply = async (req, res) => {
       downvotes: result.downvotes.length
     });
   } catch (error) {
+    // Add logging to the catch block
+    logger.error('VoteReply endpoint error', { error: error.message, stack: error.stack, commentId, replyId, voteType });
     res.status(500).json({ message: error.message });
   }
 };
 
 exports.like = async (req, res) => {
   const { newsId } = req.body;
+  const userId = req.user.userId;
+
+  logger.info('Like/unlike attempt', { newsId, userId });
 
   try {
     // 1️⃣ Get username from logged-in user
     const user = await User.findById(req.user.userId).select("username");
     if (!user) {
+      logger.warn('Like failed - user not found', { userId, newsId });
       return res.status(404).json({ message: "User not found" });
     }
     const username = user.username;
@@ -484,6 +496,7 @@ exports.like = async (req, res) => {
     // 3️⃣ Update total likes count in News model
     const newsItem = await News.findOne({ news_id: newsId });
     if (!newsItem) {
+      logger.warn('Like failed - news item not found', { newsId, userId });
       return res.status(404).json({ message: "News item not found" });
     }
 
@@ -499,6 +512,13 @@ exports.like = async (req, res) => {
 
     await newsItem.save();
 
+    logger.info(`News ${isLiked ? "liked" : "unliked"} successfully`, {
+        newsId,
+        userId,
+        totalLikes: newsItem.likes,
+        userLikeStatus: userNews.likes
+    });
+
     // 4️⃣ Respond with updated info
     res.status(200).json({
       message: `News ${isLiked ? "liked" : "unliked"} successfully`,
@@ -506,6 +526,12 @@ exports.like = async (req, res) => {
       userLikeStatus: userNews.likes,
     });
   } catch (error) {
+    logger.error('Like operation failed', {
+        error: error.message,
+        stack: error.stack,
+        newsId,
+        userId
+    });
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
