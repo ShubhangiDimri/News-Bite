@@ -1,14 +1,19 @@
 const logger = require('../utils/logging');
 const User = require('../models/User');
 
-// View user profile
+// View user profile by username
 exports.viewProfile = async (req, res) => {
   const { username } = req.params;
 
-  logger.info('View profile attempt', { username, requestedBy: req.user.userId });
+  if (!username) {
+    logger.warn('View profile failed - no username provided');
+    return res.status(400).json({ message: "Username is required" });
+  }
+
+  logger.info('View profile attempt', { username });
 
   try {
-    const user = await User.findOne({ username }).select('-password');
+    const user = await User.findOne({ username }).select('_id username bio_data');
 
     if (!user) {
       logger.warn('View profile failed - user not found', { username });
@@ -22,9 +27,7 @@ exports.viewProfile = async (req, res) => {
       user: {
         _id: user._id,
         username: user.username,
-        email: user.email,
-        bio: user.bio || null,
-        createdAt: user.createdAt
+        bio_data: user.bio_data
       }
     });
   } catch (error) {
@@ -40,45 +43,47 @@ exports.viewProfile = async (req, res) => {
 
 // Edit user profile
 exports.editProfile = async (req, res) => {
-  const userId = req.user.userId;
-  const { bio, email } = req.body;
+  const username = req.user.username; // Use username from authenticated user
+  const { bio_data } = req.body;
 
-  logger.info('Edit profile attempt', { userId });
+  logger.info('Edit profile attempt', { username });
 
   try {
-    const updateData = {};
-    
-    if (bio !== undefined) updateData.bio = bio;
-    if (email !== undefined) updateData.email = email;
-
-    if (Object.keys(updateData).length === 0) {
-      logger.warn('Edit profile failed - no valid fields to update', { userId });
-      return res.status(400).json({ message: "No valid fields to update" });
+    // Validate that bio_data field is provided (can be empty string)
+    if (bio_data === undefined) {
+      logger.warn('Edit profile failed - no valid fields to update', { username });
+      return res.status(400).json({ 
+        message: "At least one updatable field (bio_data) must be provided" 
+      });
     }
 
-    const user = await User.findByIdAndUpdate(
-      userId,
-      updateData,
-      { new: true }
-    ).select('-password');
+    // Find and update user by username (more secure than using ID)
+    const user = await User.findOneAndUpdate(
+      { username },
+      { bio_data },
+      { 
+        new: true, // Return updated document
+        select: '_id username bio_data' // Only return these fields
+      }
+    );
 
     if (!user) {
-      logger.warn('Edit profile failed - user not found', { userId });
+      logger.warn('Edit profile failed - user not found', { username });
       return res.status(404).json({ message: "User not found" });
     }
 
     logger.info('Edit profile successful', {
-      userId,
-      updatedFields: Object.keys(updateData)
+      username,
+      updatedFields: ['bio_data']
     });
 
+    // Return consistent minimal user structure
     res.status(200).json({
       message: "Profile updated successfully",
       user: {
         _id: user._id,
         username: user.username,
-        email: user.email,
-        bio: user.bio || null
+        bio_data: user.bio_data
       }
     });
   } catch (error) {
@@ -98,7 +103,7 @@ exports.getCurrentProfile = async (req, res) => {
   logger.info('Fetch current profile', { userId });
 
   try {
-    const user = await User.findById(userId).select('-password');
+    const user = await User.findById(userId).select('_id username bio_data');
 
     if (!user) {
       logger.warn('Current profile failed - user not found', { userId });
@@ -111,9 +116,7 @@ exports.getCurrentProfile = async (req, res) => {
       user: {
         _id: user._id,
         username: user.username,
-        email: user.email,
-        bio: user.bio || null,
-        createdAt: user.createdAt
+        bio_data: user.bio_data
       }
     });
   } catch (error) {

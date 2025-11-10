@@ -35,7 +35,12 @@ router.post("/likes", authMiddleware, toggleLike);
 router.get("/likes/:news_id", getLikesCount);
 
 // Profile routes
-router.get("/profile", viewProfile);
+// Get profile by username
+router.get("/profile/:username", viewProfile);
+
+// Edit logged-in user's profile
+// @accepts application/x-www-form-urlencoded
+// @body {bio_data?: string}
 router.put("/profile", authMiddleware, editProfile);
 
 // Search routes
