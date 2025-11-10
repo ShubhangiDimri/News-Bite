@@ -51,7 +51,7 @@ exports.editProfile = async (req, res) => {
   try {
     // Validate that bio_data field is provided (can be empty string)
     if (bio_data === undefined) {
-      logger.warn('Edit profile failed - no valid fields to update', { username });
+      logger.error('Edit profile failed - no valid fields provided', { username });
       return res.status(400).json({ 
         message: "At least one updatable field (bio_data) must be provided" 
       });

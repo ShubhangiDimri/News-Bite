@@ -7,18 +7,16 @@ const User = require('../models/User');
 // Add comment
 exports.addComment = async (req, res) => {
   const { comment, news_id } = req.body;
-
+  
   logger.info('Comment attempt', { news_id, userId: req.user.userId });
 
   if (!comment || !news_id) {
-    logger.warn('Comment validation failed - missing fields', {
+    logger.error('Comment validation failed - missing fields', {
       hasComment: !!comment,
       hasNewsId: !!news_id
     });
     return res.status(400).json({ message: "Comment text and news_id are required" });
-  }
-
-  try {
+  }  try {
     const user = await User.findById(req.user.userId).select("username");
     if (!user?.username) {
       logger.warn('Comment failed - user not found', { userId: req.user.userId });

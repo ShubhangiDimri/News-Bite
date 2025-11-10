@@ -106,7 +106,7 @@ exports.voteComment = async (req, res) => {
   logger.info('Comment vote attempt', { commentId, voteType, userId });
 
   if (!voteType || !['up', 'down'].includes(voteType)) {
-    logger.warn('Vote validation failed - invalid voteType', { commentId, voteType });
+    logger.error('Vote validation failed - invalid voteType', { commentId, voteType });
     return res.status(400).json({ message: "voteType must be 'up' or 'down'" });
   }
 
@@ -147,7 +147,7 @@ exports.voteReply = async (req, res) => {
   logger.info('Reply vote attempt', { commentId, replyId, voteType, userId });
 
   if (!voteType || !['up', 'down'].includes(voteType)) {
-    logger.warn('Vote validation failed - invalid voteType', { replyId, voteType });
+    logger.error('Vote validation failed - invalid voteType', { replyId, voteType });
     return res.status(400).json({ message: "voteType must be 'up' or 'down'" });
   }
 

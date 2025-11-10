@@ -16,7 +16,7 @@ exports.addReply = async (req, res) => {
   });
 
   if (!comment) {
-    logger.warn('Reply validation failed - missing comment text', {
+    logger.error('Reply validation failed - missing comment text', {
       commentId,
       news_id,
       userId: req.user.userId

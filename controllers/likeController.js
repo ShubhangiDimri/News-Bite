@@ -11,7 +11,7 @@ exports.toggleLike = async (req, res) => {
   logger.info('Like/unlike attempt', { news_id, userId });
 
   if (!news_id) {
-    logger.warn('Like validation failed - missing news_id', { userId });
+    logger.error('Like validation failed - missing news_id', { userId });
     return res.status(400).json({ message: "news_id is required" });
   }
 

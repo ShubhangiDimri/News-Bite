@@ -12,7 +12,7 @@ exports.register = async (req, res) => {
 
         // Validate input
         if (!username || !password) {
-            logger.warn(`Registration failed - Missing credentials`, { username, hasPassword: !!password });
+            logger.error(`Registration failed - Missing credentials`, { username, hasPassword: !!password });
             return res.status(400).json({ message: "Username and password are required" });
         }
 
@@ -52,8 +52,8 @@ exports.login = async (req, res) => {
         logger.info(`Login attempt for user: ${username}`);
 
         if (!username || !password) {
-            logger.warn(`Login failed - Missing credentials`, { username });
-            return res.status(400).json({ message: "username or password required" });
+            logger.error(`Login failed - Missing credentials`, { username });
+            return res.status(400).json({ message: "username or password required" })
         }
 
         const user = await User.findOne({ username });
