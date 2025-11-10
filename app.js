@@ -10,9 +10,11 @@ const app = express();
 
 const PORT = process.env.PORT || 5000;
 connectDB();
+// Primary body parser - handles application/x-www-form-urlencoded
+app.use(express.urlencoded({ extended: true }));
+// Optional JSON body parser as fallback
 app.use(express.json());
-app.use(express.urlencoded( {extended:true} ))
-app.use(cookieParser())
+app.use(cookieParser());
 
 // Add global request logging
 app.use(requestLogger);

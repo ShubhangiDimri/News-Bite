@@ -53,7 +53,7 @@ exports.register = async (req, res) =>
     }
 }
 
-// loign handling
+// login handling
 exports.login = async (req, res) => {
     try {
         const { username, password } = req.body

@@ -15,6 +15,8 @@ const router = express.Router();
 router.get("/activity", authMiddleware, activity);
 
 // Comment routes
+// @accepts application/x-www-form-urlencoded
+// @body {text: string, news_id: string}
 router.post("/comments", authMiddleware, addComment);
 router.delete("/comments/:commentId", authMiddleware, deleteComment);
 router.get("/comments/:news_id", getComments);
