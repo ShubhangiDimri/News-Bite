@@ -1,15 +1,27 @@
 const mongoose = require("mongoose");
 const { sanitizeText } = require("../utils/sanitizer");
+const logger = require("../utils/logging"); // Assuming logger is set up in utils/logger.js
 
 const News = require("../models/News");
 const UserNews = require("../models/UserNews");
 const User = require("../models/User");
 
 exports.comment = async (req, res) => {
-  // Input validation
   const { comment, newsId } = req.body;
   
+  logger.info('Comment attempt', {
+    newsId,
+    username: req.user?.username,
+    commentText: comment?.substring(0, 50) + (comment?.length > 50 ? '...' : '')
+  });
+
   if (!comment || !newsId) {
+    logger.warn('Comment validation failed', {
+      missing: {
+        comment: !comment,
+        newsId: !newsId
+      }
+    });
     return res.status(400).json({ 
       message: "Validation failed", 
       error: {
@@ -21,6 +33,14 @@ exports.comment = async (req, res) => {
 
   // Sanitize the comment
   const sanitized = sanitizeText(comment || "");
+  if (sanitized.wasCensored) {
+    logger.warn('Comment censored', {
+      newsId,
+      censoredTerms: sanitized.censoredTerms,
+      originalLength: comment.length,
+      sanitizedLength: sanitized.text.length
+    });
+  }
 
   // Get username from database using req.user info from authMiddleware
   let username = "";
@@ -70,6 +90,13 @@ exports.comment = async (req, res) => {
       await newsItem.save();
     }
 
+    logger.info('Comment added successfully', {
+      newsId,
+      commentId,
+      username,
+      wasCensored: sanitized.wasCensored
+    });
+    
     // Prepare response based on whether the comment was censored
     if (sanitized.wasCensored) {
       return res.status(200).json({
@@ -84,6 +111,12 @@ exports.comment = async (req, res) => {
       });
     }
   } catch (error) {
+    logger.error('Error adding comment', {
+      error: error.message,
+      stack: error.stack,
+      newsId,
+      username
+    });
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
@@ -117,45 +150,80 @@ exports.deleteComment = async (req, res) => {
 
 // Handle voting on comments or replies
 async function handleVote(type, userId, voteType, itemId, replyId = null) {
-  const userNews = await UserNews.findOne({
-    'comments._id': itemId
+  logger.info(`Vote attempt`, {
+    type,
+    userId,
+    voteType,
+    itemId,
+    replyId
   });
 
-  if (!userNews) {
-    throw new Error('Comment not found');
-  }
+  try {
+    const userNews = await UserNews.findOne({
+      'comments._id': itemId
+    });
 
-  let target = userNews.comments.id(itemId);
-  if (replyId) {
-    target = target.replies.id(replyId);
-    if (!target) {
-      throw new Error('Reply not found');
+    if (!userNews) {
+      logger.warn('Vote failed - item not found', { itemId });
+      throw new Error('Comment not found');
     }
+
+    let target = userNews.comments.id(itemId);
+    if (replyId) {
+      target = target.replies.id(replyId);
+      if (!target) {
+        throw new Error('Reply not found');
+      }
+    }
+
+    // Remove any existing votes by this user
+    target.upvotes = target.upvotes.filter(id => !id.equals(userId));
+    target.downvotes = target.downvotes.filter(id => !id.equals(userId));
+
+    // Add new vote unless it's the same as removed (toggle off)
+    if (voteType === 'up') {
+      target.upvotes.push(userId);
+    } else if (voteType === 'down') {
+      target.downvotes.push(userId);
+    }
+
+    // Update score
+    target.score = target.upvotes.length - target.downvotes.length;
+
+    await userNews.save();
+    logger.info('Vote recorded successfully', {
+      type,
+      score: target.score,
+      upvotes: target.upvotes.length,
+      downvotes: target.downvotes.length
+    });
+
+    return target;
+  } catch (error) {
+    logger.error('Vote error', {
+      error: error.message,
+      stack: error.stack,
+      type,
+      itemId
+    });
+    throw error;
   }
-
-  // Remove any existing votes by this user
-  target.upvotes = target.upvotes.filter(id => !id.equals(userId));
-  target.downvotes = target.downvotes.filter(id => !id.equals(userId));
-
-  // Add new vote unless it's the same as removed (toggle off)
-  if (voteType === 'up') {
-    target.upvotes.push(userId);
-  } else if (voteType === 'down') {
-    target.downvotes.push(userId);
-  }
-
-  // Update score
-  target.score = target.upvotes.length - target.downvotes.length;
-
-  await userNews.save();
-  return target;
 }
 
 exports.addReply = async (req, res) => {
   const { commentId } = req.params;
   const { comment } = req.body;
   
+  logger.info(`Reply attempt`, {
+    commentId,
+    userId: req.user.userId
+  });
+
   if (!comment) {
+    logger.warn('Reply validation failed - missing comment text', {
+      commentId,
+      userId: req.user.userId
+    });
     return res.status(400).json({ 
       message: "Reply text is required"
     });
@@ -164,6 +232,10 @@ exports.addReply = async (req, res) => {
   try {
     const user = await User.findById(req.user.userId).select("username");
     if (!user?.username) {
+      logger.warn('Reply failed - user not found', {
+        userId: req.user.userId,
+        commentId
+      });
       return res.status(404).json({ message: "User not found" });
     }
 
@@ -173,14 +245,28 @@ exports.addReply = async (req, res) => {
     });
 
     if (!userNews) {
+      logger.warn('Reply failed - parent comment not found', {
+        commentId,
+        userId: req.user.userId
+      });
       return res.status(404).json({ message: "Comment not found" });
     }
 
     // Sanitize the reply text
     const sanitized = sanitizeText(comment);
+    if (sanitized.wasCensored) {
+      logger.warn('Reply censored', {
+        commentId,
+        userId: req.user.userId,
+        censoredTerms: sanitized.censoredTerms,
+        originalLength: comment.length,
+        sanitizedLength: sanitized.text.length
+      });
+    }
 
+    const replyId = new mongoose.Types.ObjectId();
     const replyData = {
-      _id: new mongoose.Types.ObjectId(),
+      _id: replyId,
       userId: req.user.userId,
       username: user.username,
       comment: sanitized.text || comment,
@@ -195,6 +281,14 @@ exports.addReply = async (req, res) => {
     parentComment.replies.push(replyData);
     await userNews.save();
 
+    logger.info('Reply added successfully', {
+      replyId,
+      commentId,
+      userId: req.user.userId,
+      username: user.username,
+      wasCensored: sanitized.wasCensored
+    });
+    
     // Prepare response based on whether the reply was censored
     if (sanitized.wasCensored) {
       return res.status(200).json({
@@ -208,12 +302,24 @@ exports.addReply = async (req, res) => {
       });
     }
   } catch (error) {
+    logger.error('Reply error', {
+      error: error.message,
+      stack: error.stack,
+      commentId,
+      userId: req.user.userId
+    });
     return res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
 exports.deleteReply = async (req, res) => {
   const { commentId, replyId } = req.params;
+
+  logger.info('Reply deletion attempt', {
+    commentId,
+    replyId,
+    userId: req.user.userId
+  });
 
   try {
     const result = await UserNews.updateOne(
@@ -226,11 +332,29 @@ exports.deleteReply = async (req, res) => {
     );
 
     if (result.modifiedCount === 0) {
+      logger.warn('Reply deletion failed - not found or unauthorized', {
+        commentId,
+        replyId,
+        userId: req.user.userId
+      });
       return res.status(404).json({ message: "Reply not found or unauthorized" });
     }
 
+    logger.info('Reply deleted successfully', {
+      commentId,
+      replyId,
+      userId: req.user.userId
+    });
+
     res.status(200).json({ message: "Reply deleted successfully" });
   } catch (error) {
+    logger.error('Reply deletion error', {
+      error: error.message,
+      stack: error.stack,
+      commentId,
+      replyId,
+      userId: req.user.userId
+    });
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
@@ -239,6 +363,12 @@ exports.getReplies = async (req, res) => {
   const { commentId } = req.params;
   const { page = 1, limit = 10 } = req.query;
 
+  logger.info('Fetching replies', {
+    commentId,
+    page,
+    limit
+  });
+
   try {
     const userNews = await UserNews.findOne(
       { 'comments._id': commentId },
@@ -246,12 +376,20 @@ exports.getReplies = async (req, res) => {
     );
 
     if (!userNews || !userNews.comments[0]) {
+      logger.warn('Replies fetch failed - comment not found', { commentId });
       return res.status(404).json({ message: "Comment not found" });
     }
 
     const replies = userNews.comments[0].replies;
     const start = (page - 1) * limit;
     const paginatedReplies = replies.slice(start, start + limit);
+
+    logger.info('Replies fetched successfully', {
+      commentId,
+      totalReplies: replies.length,
+      returnedReplies: paginatedReplies.length,
+      page
+    });
 
     res.status(200).json({
       replies: paginatedReplies,
@@ -260,6 +398,11 @@ exports.getReplies = async (req, res) => {
       totalPages: Math.ceil(replies.length / limit)
     });
   } catch (error) {
+    logger.error('Replies fetch error', {
+      error: error.message,
+      stack: error.stack,
+      commentId
+    });
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
@@ -281,6 +424,8 @@ exports.voteComment = async (req, res) => {
       downvotes: result.downvotes.length
     });
   } catch (error) {
+    // Add logging to the catch block
+    logger.error('VoteComment endpoint error', { error: error.message, stack: error.stack, commentId, voteType });
     res.status(500).json({ message: error.message });
   }
 };
@@ -302,17 +447,23 @@ exports.voteReply = async (req, res) => {
       downvotes: result.downvotes.length
     });
   } catch (error) {
+    // Add logging to the catch block
+    logger.error('VoteReply endpoint error', { error: error.message, stack: error.stack, commentId, replyId, voteType });
     res.status(500).json({ message: error.message });
   }
 };
 
 exports.like = async (req, res) => {
   const { newsId } = req.body;
+  const userId = req.user.userId;
+
+  logger.info('Like/unlike attempt', { newsId, userId });
 
   try {
     // 1️⃣ Get username from logged-in user
     const user = await User.findById(req.user.userId).select("username");
     if (!user) {
+      logger.warn('Like failed - user not found', { userId, newsId });
       return res.status(404).json({ message: "User not found" });
     }
     const username = user.username;
@@ -345,6 +496,7 @@ exports.like = async (req, res) => {
     // 3️⃣ Update total likes count in News model
     const newsItem = await News.findOne({ news_id: newsId });
     if (!newsItem) {
+      logger.warn('Like failed - news item not found', { newsId, userId });
       return res.status(404).json({ message: "News item not found" });
     }
 
@@ -360,6 +512,13 @@ exports.like = async (req, res) => {
 
     await newsItem.save();
 
+    logger.info(`News ${isLiked ? "liked" : "unliked"} successfully`, {
+        newsId,
+        userId,
+        totalLikes: newsItem.likes,
+        userLikeStatus: userNews.likes
+    });
+
     // 4️⃣ Respond with updated info
     res.status(200).json({
       message: `News ${isLiked ? "liked" : "unliked"} successfully`,
@@ -367,6 +526,12 @@ exports.like = async (req, res) => {
       userLikeStatus: userNews.likes,
     });
   } catch (error) {
+    logger.error('Like operation failed', {
+        error: error.message,
+        stack: error.stack,
+        newsId,
+        userId
+    });
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
@@ -446,16 +611,9 @@ exports.editProfile = async (req, res) => {
 //Search & filter
 
 exports.searchNews = async (req, res) => {
-  try {
-        res.status(200).json({ user });
-    } catch (error) {
-        res.status(500).json({ message: "Server error", error: error.message });
-    }
-};
+  const startTime = Date.now();
+  logger.info('Search request', { query: req.query });
 
-//Search & filter
-
-exports.searchNews = async (req, res) => {
   try {
     const {
       query,
@@ -509,6 +667,20 @@ exports.searchNews = async (req, res) => {
     // Total count for pagination metadata
     const total = await News.countDocuments(filter);
 
+    const duration = Date.now() - startTime;
+    if (duration > 1000) {
+      logger.warn('Slow search detected', {
+        duration,
+        query: req.query
+      });
+    }
+
+    logger.info('Search completed', {
+      duration,
+      totalResults: total,
+      returnedResults: news.length
+    });
+
     res.status(200).json({
       total,
       currentPage: parseInt(page),
@@ -516,11 +688,14 @@ exports.searchNews = async (req, res) => {
       results: news,
     });
   } catch (error) {
-    console.error("Error searching news:", error);
+    logger.error('Search error', {
+      error: error.message,
+      stack: error.stack,
+      query: req.query
+    });
     res.status(500).json({ message: "Server error" });
   }
 };
-
 
 
 
@@ -528,9 +703,12 @@ exports.searchNews = async (req, res) => {
 // Toggle bookmark
 exports.toggleBookmark = async (req, res) => {
   const { username, news_id } = req.body;
+  
+  logger.info(`Bookmark toggle attempt`, { username, news_id });
 
   try {
     let entry = await UserNews.findOne({ username, news_id });
+    const previousState = entry?.bookmarked;
 
     if (entry) {
       entry.bookmarked = !entry.bookmarked;
@@ -540,8 +718,21 @@ exports.toggleBookmark = async (req, res) => {
       await entry.save();
     }
 
+    logger.info('Bookmark updated', {
+      username,
+      news_id,
+      previousState,
+      newState: entry.bookmarked
+    });
+
     res.status(200).json({ message: "Bookmark updated", bookmarked: entry.bookmarked });
   } catch (err) {
+    logger.error('Bookmark error', {
+      error: err.message,
+      stack: err.stack,
+      username,
+      news_id
+    });
     res.status(500).json({ error: err.message });
   }
 };

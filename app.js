@@ -5,6 +5,7 @@ const connectDB = require("./database/DatabaseConnection");
 const authRoutes = require('./routes/authRoutes')
 const newsRoutes = require('./routes/newsRoutes')
 const userRoutes = require('./routes/userRoutes')
+const requestLogger = require('./middlewares/requestLogger');
 const app = express();
 
 const PORT = process.env.PORT || 5000;
@@ -12,6 +13,9 @@ connectDB();
 app.use(express.json());
 app.use(express.urlencoded( {extended:true} ))
 app.use(cookieParser())
+
+// Add global request logging
+app.use(requestLogger);
 
 app.get("/", (req, res) => {
   res.send("Welcome to the new summarizer api");

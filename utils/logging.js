@@ -6,10 +6,20 @@ const logger = winston.createLogger({
   format: winston.format.combine(
     winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
     winston.format.errors({ stack: true }),
-    winston.format.printf(({ level, message, timestamp, stack }) => {
-      return stack 
-        ? `${timestamp} [${level.toUpperCase()}]: ${message}\n${stack}`
-        : `${timestamp} [${level.toUpperCase()}]: ${message}`;
+    winston.format.printf(({ level, message, timestamp, stack, ...meta }) => {
+      let log = `${timestamp} [${level.toUpperCase()}]: ${message}`;
+      
+      // Add metadata if present
+      if (Object.keys(meta).length > 0) {
+        log += ` ${JSON.stringify(meta)}`;
+      }
+      
+      // Add stack trace if present
+      if (stack) {
+        log += `\n${stack}`;
+      }
+      
+      return log;
     })
   ),
   transports: [

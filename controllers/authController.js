@@ -1,7 +1,7 @@
-const bcrypt = require('bcryptjs')
-const jwt = require('jsonwebtoken')
-const User = require('../models/User')
-const logger = require('../utils/logging')
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const User = require('../models/User');
+const logger = require('../utils/logging');
 
 // registering a user
 exports.register = async (req, res) => 
@@ -38,26 +38,27 @@ exports.register = async (req, res) =>
     }
 }
 
-    // loign handling
-    exports.login = async (req, res) => 
-    {
-        try {
-            const { username, password } = req.body
+// loign handling
+exports.login = async (req, res) => {
+    try {
+        const { username, password } = req.body
+        
+        logger.info(`Login attempt for user: ${username}`);
 
         if (!username || !password) {
-            logger.error(`Login failed - Missing credentials`);
+            logger.warn(`Login failed - Missing credentials`, { username });
             return res.status(400).json({ message: "username or password required" })
         }
 
         const user = await User.findOne({ username })
         if (!user) {
-            logger.warn(`Login failed - User not found: ${username}`);
+            logger.warn(`Login failed - User not found`, { username });
             return res.status(401).json({ message: "Invalid credentials" })
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            logger.error(`Login failed - Invalid password for: ${username}`);
+            logger.warn(`Login failed - Invalid password`, { username });
             return res.status(401).json({ message: "Invalid credentials" });
         }
 
@@ -67,11 +68,17 @@ exports.register = async (req, res) =>
         });
 
         res.cookie("authToken", token, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 })
-        logger.info(`User logged in successfully: ${username}`);
+        
+        // This was the line causing the [object Object] log. It's now fixed.
+        logger.info(`User logged in successfully`, { userId: user._id, username });
+        
         res.json({ message: "Login successful" });
     }
     catch(error) {
-        logger.error(`Login error: ${error.message}`, { stack: error.stack });
+        logger.error(`Login error for user: ${req.body.username}`, { 
+            error: error.message, 
+            stack: error.stack 
+        });
         res.status(500).json({ message: error.message })
     }
 }
