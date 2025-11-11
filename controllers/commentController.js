@@ -82,7 +82,8 @@ exports.addComment = async (req, res) => {
 
 // Delete comment
 exports.deleteComment = async (req, res) => {
-  const { commentId, news_id } = req.body;
+  const commentId = req.params.commentId;
+  const { news_id } = req.body;
 
   logger.info('Delete comment attempt', { commentId, news_id, userId: req.user.userId });
 

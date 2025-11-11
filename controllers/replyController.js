@@ -6,35 +6,35 @@ const User = require('../models/User');
 
 // Add reply to comment
 exports.addReply = async (req, res) => {
-  const { commentId, news_id } = req.params;
-  const { comment } = req.body;
+  const { commentId } = req.params;
+  const { news_id, comment } = req.body;
+  const userId = req.user.userId;
+  const username = req.user.username;
   
   logger.info('Reply attempt', {
     commentId,
     news_id,
-    userId: req.user.userId
+    username
   });
 
   if (!comment) {
     logger.error('Reply validation failed - missing comment text', {
       commentId,
       news_id,
-      userId: req.user.userId
+      username
     });
     return res.status(400).json({ message: "Reply text is required" });
   }
 
-  try {
-    const user = await User.findById(req.user.userId).select("username");
-    if (!user?.username) {
-      logger.warn('Reply failed - user not found', {
-        userId: req.user.userId,
-        commentId,
-        news_id
-      });
-      return res.status(404).json({ message: "User not found" });
-    }
+  if (!news_id) {
+    logger.error('Reply validation failed - missing news_id', {
+      commentId,
+      username
+    });
+    return res.status(400).json({ message: "news_id is required" });
+  }
 
+  try {
     // Find the parent comment
     const userNews = await UserNews.findOne({
       news_id,
@@ -45,7 +45,7 @@ exports.addReply = async (req, res) => {
       logger.warn('Reply failed - parent comment not found', {
         commentId,
         news_id,
-        userId: req.user.userId
+        username
       });
       return res.status(404).json({ message: "Comment not found" });
     }
@@ -56,7 +56,7 @@ exports.addReply = async (req, res) => {
       logger.warn('Reply censored', {
         commentId,
         news_id,
-        userId: req.user.userId,
+        username,
         censoredTerms: sanitized.censoredTerms,
         originalLength: comment.length,
         sanitizedLength: sanitized.text.length
@@ -66,8 +66,8 @@ exports.addReply = async (req, res) => {
     const replyId = new mongoose.Types.ObjectId();
     const replyData = {
       _id: replyId,
-      userId: req.user.userId,
-      username: user.username,
+      userId: userId,
+      username: username,
       comment: sanitized.text || comment,
       originalText: comment,
       wasCensored: sanitized.wasCensored,
@@ -87,8 +87,7 @@ exports.addReply = async (req, res) => {
       replyId,
       commentId,
       news_id,
-      userId: req.user.userId,
-      username: user.username,
+      username,
       wasCensored: sanitized.wasCensored,
       parentId: commentId
     });
@@ -97,7 +96,7 @@ exports.addReply = async (req, res) => {
       message: "Reply added successfully",
       reply: {
         _id: replyId,
-        username: user.username,
+        username: username,
         comment: sanitized.text || comment,
         wasCensored: sanitized.wasCensored,
         parentId: commentId
@@ -109,7 +108,7 @@ exports.addReply = async (req, res) => {
       stack: error.stack,
       commentId,
       news_id,
-      userId: req.user.userId
+      username
     });
     return res.status(500).json({ message: "Server error", error: error.message });
   }
@@ -117,18 +116,17 @@ exports.addReply = async (req, res) => {
 
 // Delete reply
 exports.deleteReply = async (req, res) => {
-  const { commentId, replyId, news_id } = req.params;
+  const { commentId, replyId } = req.params;
 
   logger.info('Reply deletion attempt', {
     commentId,
     replyId,
-    news_id,
     userId: req.user.userId
   });
 
   try {
     const result = await UserNews.updateOne(
-      { news_id, 'comments._id': commentId },
+      { 'comments._id': commentId },
       { 
         $pull: { 
           'comments.$.replies': { _id: replyId, userId: req.user.userId }
@@ -140,7 +138,6 @@ exports.deleteReply = async (req, res) => {
       logger.warn('Reply deletion failed - not found or unauthorized', {
         commentId,
         replyId,
-        news_id,
         userId: req.user.userId
       });
       return res.status(404).json({ message: "Reply not found or unauthorized" });
@@ -149,7 +146,6 @@ exports.deleteReply = async (req, res) => {
     logger.info('Reply deleted successfully', {
       commentId,
       replyId,
-      news_id,
       userId: req.user.userId
     });
 
@@ -160,7 +156,6 @@ exports.deleteReply = async (req, res) => {
       stack: error.stack,
       commentId,
       replyId,
-      news_id,
       userId: req.user.userId
     });
     res.status(500).json({ message: "Server error", error: error.message });
@@ -169,34 +164,32 @@ exports.deleteReply = async (req, res) => {
 
 // Get all replies for a comment
 exports.getReplies = async (req, res) => {
-  const { commentId, news_id } = req.params;
+  const { commentId } = req.params;
   const { page = 1, limit = 10 } = req.query;
 
   logger.info('Fetching replies', {
     commentId,
-    news_id,
     page,
     limit
   });
 
   try {
     const userNews = await UserNews.findOne(
-      { news_id, 'comments._id': commentId },
+      { 'comments._id': commentId },
       { 'comments.$': 1 }
     );
 
     if (!userNews || !userNews.comments[0]) {
-  logger.warn('Replies fetch failed - comment not found', { commentId, news_id });
+      logger.warn('Replies fetch failed - comment not found', { commentId });
       return res.status(404).json({ message: "Comment not found" });
     }
 
-    const replies = userNews.comments[0].replies || [];
+    const replies = userNews.comments[0].replies;
     const start = (page - 1) * limit;
     const paginatedReplies = replies.slice(start, start + limit);
 
     logger.info('Replies fetched successfully', {
       commentId,
-      news_id,
       totalReplies: replies.length,
       returnedReplies: paginatedReplies.length,
       page
@@ -212,9 +205,9 @@ exports.getReplies = async (req, res) => {
     logger.error('Replies fetch error', {
       error: error.message,
       stack: error.stack,
-      commentId,
-      news_id
+      commentId
     });
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
