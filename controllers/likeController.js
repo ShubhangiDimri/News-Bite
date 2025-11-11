@@ -7,34 +7,35 @@ const User = require('../models/User');
 exports.toggleLike = async (req, res) => {
   const { news_id } = req.body;
   const userId = req.user.userId;
+  const username = req.user.username;
 
-  logger.info('Like/unlike attempt', { news_id, userId });
+  logger.info('Like/unlike attempt', { news_id, username });
 
   if (!news_id) {
-    logger.error('Like validation failed - missing news_id', { userId });
+    logger.error('Like validation failed - missing news_id', { username });
     return res.status(400).json({ message: "news_id is required" });
   }
 
   try {
-    const user = await User.findById(userId).select("username");
-    if (!user) {
-      logger.warn('Like failed - user not found', { userId, news_id });
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    let userNews = await UserNews.findOne({ news_id });
+    let userNews = await UserNews.findOne({ news_id, username });
+    
+    // Create new UserNews record if it doesn't exist
     if (!userNews) {
-      userNews = new UserNews({ news_id });
+      userNews = new UserNews({ 
+        news_id,
+        username
+      });
     }
 
-    const isLiked = userNews.likes ? true : false;
+    // Check if already liked
+    const isLiked = userNews.likes > 0 ? true : false;
 
     if (isLiked) {
-      userNews.likes = false;
-      logger.info('Like toggled OFF', { news_id, userId, username: user.username });
+      userNews.likes = 0;
+      logger.info('Like toggled OFF', { news_id, username });
     } else {
-      userNews.likes = true;
-      logger.info('Like toggled ON', { news_id, userId, username: user.username });
+      userNews.likes = 1;
+      logger.info('Like toggled ON', { news_id, username });
     }
 
     await userNews.save();
@@ -57,7 +58,7 @@ exports.toggleLike = async (req, res) => {
       error: error.message,
       stack: error.stack,
       news_id,
-      userId
+      username
     });
     res.status(500).json({ message: "Server error", error: error.message });
   }
