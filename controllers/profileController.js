@@ -3,17 +3,16 @@ const User = require('../models/User');
 
 // View user profile by username
 exports.viewProfile = async (req, res) => {
-  const { username } = req.params;
+  let { username } = req.params;
 
   if (!username) {
-    logger.warn('View profile failed - no username provided');
-    return res.status(400).json({ message: "Username is required" });
+    username = req.user.username; // Default to logged-in user's username
   }
 
   logger.info('View profile attempt', { username });
 
   try {
-    const user = await User.findOne({ username }).select('_id username bio_data');
+    const user = await User.findOne({ username }).select('_id username bio_data photo');
 
     if (!user) {
       logger.warn('View profile failed - user not found', { username });
@@ -27,7 +26,8 @@ exports.viewProfile = async (req, res) => {
       user: {
         _id: user._id,
         username: user.username,
-        bio_data: user.bio_data
+        bio_data: user.bio_data,
+        profileImage: user.photo
       }
     });
   } catch (error) {

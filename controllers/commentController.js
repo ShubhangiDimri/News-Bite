@@ -8,40 +8,28 @@ const Activity = require('../models/Activity');
 // Add comment
 exports.addComment = async (req, res) => {
   const { comment, news_id } = req.body;
-  
-  logger.info('Comment attempt', { news_id, userId: req.user.userId });
 
   if (!comment || !news_id) {
-    logger.error('Comment validation failed - missing fields', {
-      hasComment: !!comment,
-      hasNewsId: !!news_id
-    });
     return res.status(400).json({ message: "Comment text and news_id are required" });
-  }  try {
-    const user = await User.findById(req.user.userId).select("username");
-    if (!user?.username) {
-      logger.warn('Comment failed - user not found', { userId: req.user.userId });
-      return res.status(404).json({ message: "User not found" });
-    }
+  }
 
-    // Sanitize the comment
+  try {
+    const user = await User.findById(req.user.userId).select("username");
+    if (!user) return res.status(404).json({ message: "User not found" });
+
     const sanitized = sanitizeText(comment);
-    if (sanitized.wasCensored) {
-      logger.warn('Comment censored', {
-          news_id,
-        userId: req.user.userId,
-        censoredTerms: sanitized.censoredTerms,
-        originalLength: comment.length,
-        sanitizedLength: sanitized.text.length
+
+    let userNews = await UserNews.findOne({ news_id });
+
+    if (!userNews) {
+      userNews = new UserNews({
+        news_id,
+        username: user.username,  // IMPORTANT FIX
       });
     }
 
-      let userNews = await UserNews.findOne({ news_id });
-      if (!userNews) {
-        userNews = new UserNews({ news_id });
-      }
-
     const commentId = new mongoose.Types.ObjectId();
+
     userNews.comments.push({
       _id: commentId,
       userId: req.user.userId,
@@ -63,13 +51,6 @@ exports.addComment = async (req, res) => {
       meta: { wasCensored: sanitized.wasCensored }
     });
 
-    logger.info('Comment added successfully', {
-      news_id,
-      commentId,
-      username: user.username,
-      wasCensored: sanitized.wasCensored
-    });
-
     res.status(201).json({
       message: "Comment added successfully",
       comment: {
@@ -79,16 +60,12 @@ exports.addComment = async (req, res) => {
         wasCensored: sanitized.wasCensored
       }
     });
+
   } catch (error) {
-    logger.error('Comment error', {
-      error: error.message,
-      stack: error.stack,
-      news_id,
-      userId: req.user.userId
-    });
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
 
 // Delete comment
 exports.deleteComment = async (req, res) => {

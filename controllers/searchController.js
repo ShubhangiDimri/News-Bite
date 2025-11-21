@@ -4,7 +4,7 @@ const News = require('../models/News');
 // Search and filter news
 exports.searchNews = async (req, res) => {
   const startTime = Date.now();
-  const { query, category, startDate, endDate, page = 1, limit = 10 } = req.query;
+  const { query, category, startDate, endDate, page = 1, limit = 9 } = req.query;
 
   logger.info('Search request', {
     query,
@@ -142,5 +142,43 @@ exports.getByCategory = async (req, res) => {
       category
     });
     res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+
+//Get News by ID
+exports.getNewsById = async (req, res) => {
+  const newsId = req.params.newsId;
+
+  logger.info('Fetch news by ID', { newsId });
+
+  try {
+    // IMPORTANT: your news_id is a STRING, NOT ObjectId
+    const newsItem = await News.findOne({ news_id: newsId });
+
+    if (!newsItem) {
+      logger.warn('News item not found', { newsId });
+      return res.status(404).json({ message: "News item not found" });
+    }
+
+    logger.info('News item fetched successfully', { newsId });
+
+    res.status(200).json({ news: newsItem });
+  } catch (error) {
+    logger.error('Get news by ID error', {
+      error: error.message,
+      stack: error.stack,
+      newsId
+    });
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+exports.getCategories = async (req, res) => {
+  try {
+    const categories = await News.distinct("category");
+    res.status(200).json({ categories });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 };

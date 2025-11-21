@@ -1,9 +1,12 @@
 const logger = require('../utils/logging');
-const { v4: uuidv4 } = require('uuid');
+const generateRequestId = async () => {
+  const { v4: uuidv4 } = await import('uuid'); // Dynamic import
+  return uuidv4();
+};
 
-const requestLogger = (req, res, next) => {
+const requestLogger = async (req, res, next) => {
     const start = Date.now();
-    req.id = uuidv4();
+    req.id = await generateRequestId();
 
     // Log incoming request
     logger.info(`--> ${req.method} ${req.path}`, {

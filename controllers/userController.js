@@ -32,3 +32,31 @@ exports.activity = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+// Update profile photo
+exports.uploadPhoto = async (req, res) => {
+  try {
+    const username = req.user.username;  // or however you identify user
+
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+    //save image along with data:image/png;base64
+    const photoBase64 = "data:image/png;base64," + req.file.buffer.toString("base64");
+
+    const user = await User.findOneAndUpdate(
+      { username },
+      { photo: photoBase64 },
+      { new: true }
+    );
+
+    res.json({
+        message: "Photo updated",
+        profileImage: user.photo
+    });
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: "Error uploading photo" });
+  }
+};
