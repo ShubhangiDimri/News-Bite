@@ -40,8 +40,8 @@ module.exports = async (req, res, next) => {
             });
         }
 
-        // Fetch user to verify existence and get username
-        const user = await User.findById(decoded.userId).select('username');
+        // Fetch user to verify existence and get username and role
+        const user = await User.findById(decoded.userId).select('username role');
         if (!user) {
             logger.warn('Auth failed - User not found', { userId: decoded.userId });
             return res.status(401).json({ 
@@ -52,7 +52,8 @@ module.exports = async (req, res, next) => {
         // Attach verified user info to request
         req.user = {
             userId: decoded.userId,
-            username: user.username
+            username: user.username,
+            role: user.role
         };
 
         logger.debug('Auth successful', { userId: user._id, username: user.username });
