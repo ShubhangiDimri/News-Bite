@@ -2,18 +2,46 @@ const User = require('../models/User');
 const logger = require('../utils/logging');
 const { hashPassword, comparePassword, generateToken } = require('../utils/auth');
 const { setAuthCookie } = require('../utils/cookie');
+const { validateUsername, validatePassword } = require('../utils/validation');
 
 // registering a user
 exports.register = async (req, res) => {
     try {
-        const { password, username } = req.body;
+        let { password, username } = req.body;
         
         logger.info(`Registration attempt for username: ${username}`);
 
-        // Validate input
-        if (!username || !password) {
-            logger.error(`Registration failed - Missing credentials`, { username, hasPassword: !!password });
-            return res.status(400).json({ message: "Username and password are required" });
+        // Validate username
+        const usernameValidation = validateUsername(username);
+        if (!usernameValidation.isValid) {
+            logger.warn(`Registration failed - Username validation failed`, { 
+                username, 
+                errors: usernameValidation.errors 
+            });
+            return res.status(400).json({ 
+                message: "Validation failed",
+                errors: {
+                    username: usernameValidation.errors
+                }
+            });
+        }
+
+        // Use trimmed username
+        username = usernameValidation.value;
+
+        // Validate password
+        const passwordValidation = validatePassword(password);
+        if (!passwordValidation.isValid) {
+            logger.warn(`Registration failed - Password validation failed`, { 
+                username,
+                errors: passwordValidation.errors 
+            });
+            return res.status(400).json({ 
+                message: "Validation failed",
+                errors: {
+                    password: passwordValidation.errors
+                }
+            });
         }
 
         // Check if user already exists
@@ -52,8 +80,8 @@ exports.login = async (req, res) => {
         logger.info(`Login attempt for user: ${username}`);
 
         if (!username || !password) {
-            logger.error(`Login failed - Missing credentials`, { username });
-            return res.status(400).json({ message: "username or password required" })
+            logger.warn(`Login failed - Missing credentials`, { username });
+            return res.status(400).json({ message: "Username and password are required" });
         }
 
         const user = await User.findOne({ username });
