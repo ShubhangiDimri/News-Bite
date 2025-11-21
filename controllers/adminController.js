@@ -366,27 +366,20 @@ exports.registrationStats = async (req, res) => {
     startDate.setDate(startDate.getDate() - daysNum);
     startDate.setHours(0, 0, 0, 0);
 
-    const stats = await User.aggregate([
-      {
-        $match: {
-          createdAt: { $gte: startDate }
-        }
-      },
-      {
-        $group: {
-          _id: {
-            $dateToString: { format: '%Y-%m-%d', date: '$createdAt', timezone: '+05:30' }
-          },
-          count: { $sum: 1 }
-        }
-      },
-      {
-        $sort: { _id: 1 }
-      }
-    ]);
+    // Get all users registered in the date range
+    const users = await User.find({
+      createdAt: { $gte: startDate }
+    }).select('createdAt');
+
+    // Group by date in JavaScript
+    const dateMap = {};
+    users.forEach(user => {
+      const date = new Date(user.createdAt);
+      const dateStr = date.toISOString().split('T')[0];
+      dateMap[dateStr] = (dateMap[dateStr] || 0) + 1;
+    });
 
     // Fill in missing days with zero counts
-    const resultMap = new Map(stats.map(s => [s._id, s.count]));
     const result = [];
     const currentDate = new Date(startDate);
 
@@ -394,12 +387,13 @@ exports.registrationStats = async (req, res) => {
       const dateStr = currentDate.toISOString().split('T')[0];
       result.push({
         date: dateStr,
-        count: resultMap.get(dateStr) || 0
+        count: dateMap[dateStr] || 0
       });
       currentDate.setDate(currentDate.getDate() + 1);
     }
 
     const totalRegistrations = await User.countDocuments();
+    const periodRegistrations = Object.values(dateMap).reduce((acc, count) => acc + count, 0);
 
     logger.info('registrationStats success', { adminId, days: daysNum, totalRegistrations });
 
@@ -407,7 +401,7 @@ exports.registrationStats = async (req, res) => {
       days: daysNum,
       registrationStats: result,
       totalRegistrations,
-      periodRegistrations: stats.reduce((acc, s) => acc + s.count, 0)
+      periodRegistrations
     });
   } catch (error) {
     logger.error('registrationStats error', {
