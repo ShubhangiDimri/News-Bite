@@ -420,11 +420,11 @@ exports.registrationStats = async (req, res) => {
 };
 
 module.exports = {
-  getAllUsers,
-  getUserActivity,
-  suspendUser,
-  unsuspendUser,
-  softDeleteUser,
-  permanentDeleteUser,
-  registrationStats
+  getAllUsers: exports.getAllUsers,
+  getUserActivity: exports.getUserActivity,
+  suspendUser: exports.suspendUser,
+  unsuspendUser: exports.unsuspendUser,
+  softDeleteUser: exports.softDeleteUser,
+  permanentDeleteUser: exports.permanentDeleteUser,
+  registrationStats: exports.registrationStats
 };
