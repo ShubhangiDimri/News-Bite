@@ -1,0 +1,33 @@
+{
+  "name": "news-bite",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/ShubhangiDimri/News-Bite#readme",
+  "bugs": {
+    "url": "https://github.com/ShubhangiDimri/News-Bite/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ShubhangiDimri/News-Bite.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^9.0.0",
+    "multer": "^2.0.2",
+    "NODE": "^0.0.0",
+    "nodemon": "^3.1.11",
+    "uuid": "^13.0.0",
+    "winston": "^3.18.3"
+  }
+}
