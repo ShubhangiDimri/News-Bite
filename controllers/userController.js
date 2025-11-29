@@ -89,3 +89,24 @@ exports.uploadPhoto = async (req, res) => {
     res.status(500).json({ message: "Error uploading photo" });
   }
 };
+
+// Remove profile photo
+exports.removePhoto = async (req, res) => {
+  try {
+    const username = req.user.username;
+
+    await User.findOneAndUpdate(
+      { username },
+      { photo: "" }
+    );
+
+    res.json({
+      message: "Photo removed",
+      success: true
+    });
+
+  } catch (err) {
+    console.log("Error removing photo:", err);
+    res.status(500).json({ message: "Error removing photo", success: false });
+  }
+};

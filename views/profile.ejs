@@ -14,7 +14,7 @@
         height: auto;
       "
     >
-      <% if (user.profileImage) { %>
+      <% if (user.profileImage && user.profileImage.trim() !== '') { %>
       <img
         id="avatarImage"
         src="<%= user.profileImage %>"
@@ -161,11 +161,146 @@
   const cameraIcon = document.getElementById("cameraIcon");
   const fileInput = document.getElementById("photoInput");
 
-  if (cameraIcon && fileInput) {
-    cameraIcon.addEventListener("click", (e) => {
-      e.stopPropagation(); // Prevent bubbling if any
+  // Create custom modal for photo options
+  function showPhotoOptionsModal() {
+    // Remove existing modal if any
+    const existingModal = document.getElementById("photoOptionsModal");
+    if (existingModal) existingModal.remove();
+
+    const modal = document.createElement("div");
+    modal.id = "photoOptionsModal";
+    modal.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    `;
+
+    const content = document.createElement("div");
+    content.style.cssText = `
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      max-width: 400px;
+      text-align: center;
+      backdrop-filter: blur(10px);
+    `;
+
+    content.innerHTML = `
+      <h2 style="color: var(--text-main); margin-bottom: 1.5rem; font-size: 1.5rem;">Update Profile Picture</h2>
+      <div style="display: flex; flex-direction: column; gap: 1rem;">
+        <button id="updatePhotoBtn" style="
+          padding: 0.8rem 1.5rem;
+          background: #26bbdc;
+          color: white;
+          border: none;
+          border-radius: var(--radius);
+          font-size: 1rem;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          font-weight: 600;
+        ">
+          📷 Update Profile Picture
+        </button>
+        <button id="removePhotoBtn" style="
+          padding: 0.8rem 1.5rem;
+          background: #ef4444;
+          color: white;
+          border: none;
+          border-radius: var(--radius);
+          font-size: 1rem;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          font-weight: 600;
+        ">
+          🗑️ Remove Profile Picture
+        </button>
+        <button id="cancelPhotoBtn" style="
+          padding: 0.8rem 1.5rem;
+          background: var(--text-muted);
+          color: white;
+          border: none;
+          border-radius: var(--radius);
+          font-size: 1rem;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        ">
+          Cancel
+        </button>
+      </div>
+    `;
+
+    modal.appendChild(content);
+    document.body.appendChild(modal);
+
+    // Button event listeners
+    document.getElementById("updatePhotoBtn").addEventListener("click", () => {
+      modal.remove();
       fileInput.click();
     });
+
+    document.getElementById("removePhotoBtn").addEventListener("click", () => {
+      modal.remove();
+      removeProfilePhoto();
+    });
+
+    document.getElementById("cancelPhotoBtn").addEventListener("click", () => {
+      modal.remove();
+    });
+
+    // Close on outside click
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) {
+        modal.remove();
+      }
+    });
+  }
+
+  if (cameraIcon && fileInput) {
+    cameraIcon.addEventListener("click", (e) => {
+      e.stopPropagation();
+      
+      // Check if user already has a profile image (img tag, not div)
+      const avatarImage = document.querySelector("#profileAvatar img");
+      const hasProfilePhoto = avatarImage !== null;
+      
+      if (hasProfilePhoto) {
+        // Show custom modal with options
+        showPhotoOptionsModal();
+      } else {
+        // No existing photo, just open file picker
+        fileInput.click();
+      }
+    });
+
+    // Function to remove profile photo
+    async function removeProfilePhoto() {
+      try {
+        const res = await fetch("/api/user/remove-photo", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          }
+        });
+
+        if (res.ok) {
+          // Just reload the page - simple and works
+          location.reload();
+        } else {
+          alert("Error removing photo");
+        }
+      } catch (err) {
+        alert("Error removing photo");
+      }
+    }
 
     fileInput.addEventListener("change", async (e) => {
       if (!e.target.files || !e.target.files[0]) return;
@@ -295,7 +430,7 @@
                     '<span style="color: #ef4444; margin-right: 1rem;">♥ Liked</span>';
                 if (item.bookmarked)
                   badges +=
-                    '<span style="color: var(--primary-color); margin-right: 1rem;">🔖 Bookmarked</span>';
+                    '<span style="color: var(--primary-color); margin-right: 1rem;">💾 Saved</span>';
                 if (item.comments && item.comments.length > 0)
                   badges +=
                     '<span style="color: var(--text-muted);">💬 Commented</span>';

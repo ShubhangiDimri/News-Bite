@@ -49,7 +49,7 @@ exports.toggleBookmark = async (req, res) => {
     });
 
     res.status(200).json({
-      message: entry.bookmarked ? "Bookmarked" : "Bookmark removed",
+      message: entry.bookmarked ? "Saved" : "Removed from saved",
       bookmarked: entry.bookmarked
     });
   } catch (err) {
