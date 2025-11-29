@@ -22,9 +22,15 @@ exports.addComment = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    // Find the news item first to ensure it exists and to save the comment there
+    const newsItem = await News.findById(news_id);
+    if (!newsItem) {
+      return res.status(404).json({ message: "News item not found" });
+    }
+
     const sanitized = sanitizeText(comment);
 
-    // Get or create UserNews for this user and news
+    // Get or create UserNews for this user and news (keeping this for user history)
     let userNews = await UserNews.findOne({ news_id, username: user.username });
 
     if (!userNews) {
@@ -49,6 +55,10 @@ exports.addComment = async (req, res) => {
     userNews.comments.push(newComment);
     await userNews.save();
 
+    // Store comment in News (CRITICAL FIX: This was missing)
+    newsItem.comments.push(newComment);
+    await newsItem.save();
+
     await Activity.create({
       userId: req.user.userId,
       username: user.username,
@@ -64,6 +74,7 @@ exports.addComment = async (req, res) => {
     });
 
   } catch (error) {
+    console.error("Error adding comment:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
