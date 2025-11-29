@@ -50,13 +50,19 @@
           required
         />
       </div>
-      <button
-        type="submit"
-        class="btn btn-primary"
-        style="width: 100%; margin-top: 1rem"
-      >
-        Login
-      </button>
+      <div style="display: flex; gap: 1rem; margin-top: 1rem">
+        <button type="submit" class="btn btn-primary" style="flex: 1">
+          Login
+        </button>
+        <button
+          type="button"
+          id="adminLoginBtn"
+          class="btn btn-outline"
+          style="flex: 1"
+        >
+          Admin Login
+        </button>
+      </div>
     </form>
     <div class="auth-footer" style="margin-top: 1.5rem">
       Don't have an account? <a href="/register">Sign up</a>
@@ -65,7 +71,16 @@
 </div>
 
 <script>
-  document.getElementById("loginForm").addEventListener("submit", async (e) => {
+  const loginForm = document.getElementById("loginForm");
+  const adminLoginBtn = document.getElementById("adminLoginBtn");
+  let isAdminLogin = false;
+
+  adminLoginBtn.addEventListener("click", () => {
+    isAdminLogin = true;
+    loginForm.requestSubmit();
+  });
+
+  loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
@@ -80,13 +95,29 @@
       const result = await res.json();
 
       if (res.ok) {
-        window.location.href = "/";
+        if (isAdminLogin) {
+          if (result.role === "admin") {
+            window.location.href = "/admin";
+          } else {
+            alert("Access Denied: You are not an admin.");
+            isAdminLogin = false; // Reset flag
+          }
+        } else {
+          // Standard login - redirect based on role
+          if (result.role === "admin") {
+            window.location.href = "/admin";
+          } else {
+            window.location.href = "/";
+          }
+        }
       } else {
         alert(result.message || "Login failed");
+        isAdminLogin = false; // Reset flag
       }
     } catch (err) {
       console.error(err);
       alert("An error occurred");
+      isAdminLogin = false; // Reset flag
     }
   });
 </script>

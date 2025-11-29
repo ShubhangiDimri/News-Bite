@@ -1,4 +1,46 @@
-<%- include('partials/header') %> <%- include('partials/navbar') %>
+<%- include('partials/header') %>
+
+<nav
+  style="
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--glass-border);
+  "
+>
+  <div
+    style="
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    "
+  >
+    <span>⚡</span> NewsBite
+    <span
+      style="
+        font-size: 0.75rem;
+        background: rgba(59, 130, 246, 0.2);
+        color: #3b82f6;
+        padding: 0.2rem 0.5rem;
+        border-radius: 1rem;
+        border: 1px solid rgba(59, 130, 246, 0.3);
+      "
+      >Admin</span
+    >
+  </div>
+  <a
+    href="/auth/logout"
+    class="btn-primary"
+    style="text-decoration: none; padding: 0.5rem 1rem; font-size: 0.9rem"
+    >Logout</a
+  >
+</nav>
 
 <div class="container" style="margin-top: 3rem">
   <header class="feed-header">
@@ -86,6 +128,20 @@
     </div>
   </div>
 
+  <!-- Registration Stats -->
+  <div
+    class="glass-panel"
+    style="padding: 2rem; border-radius: 1rem; margin-bottom: 3rem"
+  >
+    <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem">
+      Registration Trends (Last 30 Days)
+    </h2>
+    <div style="height: 300px; width: 100%">
+      <canvas id="registrationChart"></canvas>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <!-- Users Table -->
   <div
     class="glass-panel"
@@ -94,7 +150,6 @@
     <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem">
       User Management
     </h2>
-
     <div style="overflow-x: auto">
       <table style="width: 100%; border-collapse: collapse">
         <thead>
@@ -204,6 +259,18 @@
             </td>
             <td style="padding: 1rem">
               <div style="display: flex; gap: 0.5rem">
+                <button
+                  onclick="viewActivity('<%= u.username %>')"
+                  class="btn-outline"
+                  style="
+                    padding: 0.25rem 0.75rem;
+                    font-size: 0.75rem;
+                    border-color: #3b82f6;
+                    color: #3b82f6;
+                  "
+                >
+                  Activity
+                </button>
                 <% if (u.status === 'active' && u.role !== 'admin') { %>
                 <button
                   onclick="suspendUser('<%= u._id %>')"
@@ -255,7 +322,128 @@
   </div>
 </div>
 
+<!-- Activity Modal -->
+<div
+  id="activityModal"
+  style="
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  "
+>
+  <div
+    class="glass-panel"
+    style="
+      width: 90%;
+      max-width: 600px;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      padding: 2rem;
+      border-radius: 1.5rem;
+    "
+  >
+    <div
+      style="
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+      "
+    >
+      <h3 id="modalTitle" style="font-size: 1.5rem; font-weight: 700">
+        User Activity
+      </h3>
+      <button
+        onclick="closeModal()"
+        style="
+          background: none;
+          border: none;
+          color: var(--text-muted);
+          font-size: 1.5rem;
+          cursor: pointer;
+        "
+      >
+        &times;
+      </button>
+    </div>
+    <div id="activityContent" style="overflow-y: auto; flex: 1">Loading...</div>
+  </div>
+</div>
+
 <script>
+  // Initialize Chart.js
+  document.addEventListener('DOMContentLoaded', () => {
+    const registrationStats = <%- JSON.stringify(locals.registrationStats || []) %>;
+
+    if (registrationStats.length > 0) {
+      const ctx = document.getElementById('registrationChart').getContext('2d');
+
+      // Create gradient
+      const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+      gradient.addColorStop(0, 'rgba(59, 130, 246, 0.5)');
+      gradient.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
+
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: registrationStats.map(s => {
+            const date = new Date(s.date);
+            return `${date.getDate()}/${date.getMonth() + 1}`;
+          }),
+          datasets: [{
+            label: 'New Users',
+            data: registrationStats.map(s => s.count),
+            borderColor: '#3b82f6',
+            backgroundColor: gradient,
+            borderWidth: 2,
+            pointBackgroundColor: '#3b82f6',
+            pointBorderColor: '#fff',
+            fill: true,
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              mode: 'index',
+              intersect: false,
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              titleColor: '#fff',
+              bodyColor: '#fff',
+              borderColor: 'rgba(255, 255, 255, 0.1)',
+              borderWidth: 1
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: { color: 'rgba(255, 255, 255, 0.05)' },
+              ticks: { color: '#9ca3af', stepSize: 1 }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { color: '#9ca3af' }
+            }
+          },
+          interaction: {
+            mode: 'nearest',
+            axis: 'x',
+            intersect: false
+          }
+        }
+      });
+    }
+  });
+
   async function suspendUser(userId) {
     if (!confirm("Are you sure you want to suspend this user?")) return;
 
@@ -324,6 +512,79 @@
       alert("An error occurred");
     }
   }
+
+  function formatMeta(meta) {
+    if (!meta || Object.keys(meta).length === 0) return '';
+
+    let html = '<div style="display: grid; gap: 0.25rem; margin-top: 0.5rem; background: rgba(0,0,0,0.2); padding: 0.75rem; border-radius: 0.5rem;">';
+
+    for (const [key, value] of Object.entries(meta)) {
+      if (key === 'ip' || key === 'userAgent') continue;
+
+      let displayValue = value;
+      let displayKey = key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1');
+
+      if (key === 'targetUsername') displayKey = 'Target User';
+      if (key === 'targetId') displayKey = 'Target ID';
+
+      html += `
+        <div style="display: flex; gap: 0.5rem; font-size: 0.85rem;">
+          <span style="color: var(--text-muted); min-width: 80px;">${displayKey}:</span>
+          <span style="color: var(--text-main); word-break: break-all;">${displayValue}</span>
+        </div>
+      `;
+    }
+
+    html += '</div>';
+    return html;
+  }
+
+  async function viewActivity(username) {
+    const modal = document.getElementById('activityModal');
+    const content = document.getElementById('activityContent');
+    const title = document.getElementById('modalTitle');
+
+    title.textContent = `Activity: ${username}`;
+    content.innerHTML = '<div style="display: flex; justify-content: center; padding: 2rem;"><div class="spinner"></div></div>';
+    modal.style.display = 'flex';
+
+    try {
+      const res = await fetch(`/api/admin/users/${username}/activity`);
+      const data = await res.json();
+
+      if (res.ok) {
+        if (data.activities.length === 0) {
+          content.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 2rem;">No activity recorded.</p>';
+          return;
+        }
+
+        content.innerHTML = data.activities.map(act => `
+          <div style="padding: 1rem; border-bottom: 1px solid var(--glass-border); margin-bottom: 0.5rem; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+              <span style="font-weight: 600; color: var(--primary-color); font-family: monospace; background: rgba(59, 130, 246, 0.1); padding: 0.1rem 0.4rem; border-radius: 0.25rem;">${act.action}</span>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">${new Date(act.createdAt).toLocaleString()}</span>
+            </div>
+            ${formatMeta(act.meta)}
+          </div>
+        `).join('');
+      } else {
+        content.innerHTML = `<p style="color: #ef4444; text-align: center;">Error: ${data.message}</p>`;
+      }
+    } catch (err) {
+      console.error(err);
+      content.innerHTML = '<p style="color: #ef4444; text-align: center;">Failed to load activity.</p>';
+    }
+  }
+
+  function closeModal() {
+    document.getElementById('activityModal').style.display = 'none';
+  }
+
+  document.getElementById('activityModal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('activityModal')) {
+      closeModal();
+    }
+  });
 </script>
 
 <%- include('partials/footer') %>
