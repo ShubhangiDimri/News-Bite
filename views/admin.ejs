@@ -35,7 +35,7 @@
     >
   </div>
   <button
-    onclick="logout()"
+    onclick="handleLogout()"
     class="btn-primary"
     style="
       border: none;
@@ -711,6 +711,13 @@
       closeModal();
     }
   });
+
+  async function handleLogout() {
+    const confirmed = confirm('Are you sure you want to logout from this account?');
+    if (confirmed) {
+      await logout();
+    }
+  }
 
   async function logout() {
     try {
