@@ -39,13 +39,7 @@
           <input type="date" name="endDate" class="form-input" value="<%= endDate || '' %>">
         </div>
         
-        <div class="filter-group">
-          <label>Sort By</label>
-          <select name="sortBy" class="form-input" onchange="document.querySelector('.search-form').submit()">
-            <option value="newest" <%= sortBy === 'newest' ? 'selected' : 'selected' %>>Newest</option>
-            <option value="oldest" <%= sortBy === 'oldest' ? 'selected' : '' %>>Oldest</option>
-          </select>
-        </div>
+      </div>
     </form>
   </div>
 

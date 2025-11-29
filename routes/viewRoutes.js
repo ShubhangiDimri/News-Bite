@@ -31,19 +31,23 @@ router.get('/', async (req, res) => {
         let userInteractions = {};
         if (req.user) {
             const interactions = await UserNews.find({ username: req.user.username });
+            console.log('User interactions found:', interactions.length);
             interactions.forEach(interaction => {
                 userInteractions[interaction.news_id] = {
                     liked: interaction.likes > 0,
                     bookmarked: interaction.bookmarked
                 };
+                console.log(`News ${interaction.news_id}: liked=${interaction.likes > 0}, bookmarked=${interaction.bookmarked}`);
             });
         }
 
         const newsWithInteractions = news.map(item => {
             const interaction = userInteractions[item._id] || {};
+            const isLiked = interaction.liked || false;
+            console.log(`Item ${item._id}: isLiked=${isLiked}`);
             return {
                 ...item.toObject(),
-                isLiked: interaction.liked || false,
+                isLiked: isLiked,
                 isBookmarked: interaction.bookmarked || false
             };
         });
@@ -52,7 +56,8 @@ router.get('/', async (req, res) => {
             title: 'Home - News Summarizer',
             news: newsWithInteractions,
             currentPage: page,
-            totalPages: totalPages
+            totalPages: totalPages,
+            user: req.user
         });
     } catch (err) {
         console.error(err);

@@ -17,10 +17,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }, duration);
     };
 
-    // Like functionality
-    document.querySelectorAll('.like-btn').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
+    // Like functionality (with event delegation for dynamically added elements)
+    document.addEventListener('click', async (e) => {
+        if (e.target.closest('.like-btn')) {
             e.preventDefault();
+            const btn = e.target.closest('.like-btn');
             const newsId = btn.dataset.id;
 
             try {
@@ -49,13 +50,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error(err);
                 showToast('Something went wrong');
             }
-        });
+        }
     });
 
-    // Bookmark functionality
-    document.querySelectorAll('.bookmark-btn').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
+    // Bookmark functionality (with event delegation)
+    document.addEventListener('click', async (e) => {
+        if (e.target.closest('.bookmark-btn')) {
             e.preventDefault();
+            const btn = e.target.closest('.bookmark-btn');
             const newsId = btn.dataset.id;
 
             try {
@@ -79,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error(err);
                 showToast('Something went wrong');
             }
-        });
+        }
     });
 
     // Comment functionality
@@ -217,55 +219,89 @@ document.addEventListener('DOMContentLoaded', () => {
             const offset = parseInt(btn.dataset.offset);
 
             try {
-                const res = await fetch(`/api/user/comments/${newsId}?page=${Math.floor(offset / 10) + 1}&limit=10`);
-                const data = await res.json();
+                const allRes = await fetch(`/api/user/comments/${newsId}?limit=100`);
+                const allData = await allRes.json();
 
-                if (res.ok) {
+                if (allRes.ok) {
                     const commentsList = document.getElementById(`comments-${newsId}`);
-                    // Logic to append comments would go here. 
-                    // Since the API returns paginated comments, we might need to adjust the logic to fetch specific range or just all remaining.
-                    // For simplicity, let's redirect to a full post view or just load the next batch.
-                    // Given the current API structure, let's just hide the button and show a message or implement full rendering logic.
-                    // Implementing full rendering logic requires duplicating the comment HTML structure in JS.
-
-                    // For now, let's just remove the button and show a toast as a placeholder for full implementation
-                    // or reload the page with a query param to show all comments if we supported that.
-                    // Better: Fetch and append.
-
-                    // Simplified append for now (without replies for brevity, or full structure)
-                    // Ideally we should have a partial or a client-side template.
-
-                    showToast("Loading more comments...");
-                    // In a real app, we'd append elements here.
-                    // For this task, I'll just update the button text to indicate it's a demo or actually implement a simple append.
-
-                    // Let's implement a simple append
-                    const newComments = data.comments.slice(offset); // This is rough because API pagination might not match "slice from offset" perfectly if we already have some.
-                    // Actually the API returns paginated.
-                    // Let's just fetch ALL comments for now to keep it simple if the user asks for "more".
-
-                    const allRes = await fetch(`/api/user/comments/${newsId}?limit=100`);
-                    const allData = await allRes.json();
-
-                    if (allRes.ok) {
-                        const remaining = allData.comments.slice(offset);
-                        remaining.forEach(comment => {
-                            const div = document.createElement('div');
-                            div.className = 'comment-item';
-                            div.innerHTML = `
-                                <div style="display: flex; justify-content: space-between;">
-                                    <span class="comment-user">${comment.username}</span>
+                    const remaining = allData.comments.slice(offset);
+                    
+                    remaining.forEach(comment => {
+                        const div = document.createElement('div');
+                        div.className = 'comment-item';
+                        div.id = `comment-${comment._id}`;
+                        
+                        // Build upvotes and downvotes check
+                        const isUpvoted = comment.upvotes && comment.upvotes.includes(window.currentUserId) ? 'active' : '';
+                        const isDownvoted = comment.downvotes && comment.downvotes.includes(window.currentUserId) ? 'active' : '';
+                        
+                        // Build replies HTML
+                        let repliesHTML = '';
+                        if (comment.replies && comment.replies.length > 0) {
+                            repliesHTML = '<div class="replies-list" style="margin-left: 1rem; margin-top: 0.5rem; border-left: 2px solid var(--glass-border); padding-left: 0.5rem;">';
+                            comment.replies.forEach(reply => {
+                                const isReplyUpvoted = reply.upvotes && reply.upvotes.includes(window.currentUserId) ? 'active' : '';
+                                const isReplyDownvoted = reply.downvotes && reply.downvotes.includes(window.currentUserId) ? 'active' : '';
+                                
+                                repliesHTML += `
+                                    <div class="reply-item" id="reply-${reply._id}" style="margin-bottom: 0.5rem;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <span style="color: var(--primary-color); font-size: 0.8rem">${reply.username}:</span>
+                                            <div class="reply-actions" style="display: flex; gap: 0.3rem; align-items: center;">
+                                                <button class="vote-btn upvote-btn small ${isReplyUpvoted}" data-news-id="${newsId}" data-comment-id="${comment._id}" data-reply-id="${reply._id}" data-type="up">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
+                                                    </svg>
+                                                </button>
+                                                <span class="vote-score small">${reply.score || 0}</span>
+                                                <button class="vote-btn downvote-btn small ${isReplyDownvoted}" data-news-id="${newsId}" data-comment-id="${comment._id}" data-reply-id="${reply._id}" data-type="down">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"></path>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div style="font-size: 0.9rem; color: var(--text-muted);">${reply.comment}</div>
+                                    </div>
+                                `;
+                            });
+                            repliesHTML += '</div>';
+                        }
+                        
+                        div.innerHTML = `
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                <span class="comment-user">${comment.username}</span>
+                                <div class="comment-actions" style="display: flex; gap: 0.2rem; align-items: center;">
+                                    <button class="vote-btn upvote-btn ${isUpvoted}" data-news-id="${newsId}" data-comment-id="${comment._id}" data-type="up">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
+                                        </svg>
+                                    </button>
+                                    <span class="vote-score">${comment.score || 0}</span>
+                                    <button class="vote-btn downvote-btn ${isDownvoted}" data-news-id="${newsId}" data-comment-id="${comment._id}" data-type="down">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"></path>
+                                        </svg>
+                                    </button>
+                                    <button class="reply-toggle-btn" data-id="${comment._id}">Reply</button>
                                 </div>
-                                <div class="comment-text">${comment.comment}</div>
-                            `;
-                            commentsList.insertBefore(div, btn);
-                        });
-                        btn.remove(); // Remove button after loading all
-                    }
-
+                            </div>
+                            <div class="comment-text">${comment.comment}</div>
+                            ${repliesHTML}
+                            <form class="reply-form" id="reply-form-${comment._id}" data-news-id="${newsId}" data-comment-id="${comment._id}" style="display: none; margin-top: 0.5rem;">
+                                <div style="display: flex; gap: 0.5rem;">
+                                    <input type="text" class="reply-input form-input" placeholder="Write a reply..." required />
+                                    <button type="submit" class="btn btn-primary">Reply</button>
+                                </div>
+                            </form>
+                        `;
+                        commentsList.insertBefore(div, btn);
+                    });
+                    btn.remove(); // Remove button after loading all
                 }
             } catch (err) {
                 console.error(err);
+                showToast('Error loading more comments');
             }
         }
     });

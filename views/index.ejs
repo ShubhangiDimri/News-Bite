@@ -349,4 +349,10 @@
   <% } %>
 </div>
 
+<script>
+  // Expose current user ID for like/vote functionality
+  window.currentUserId = '<%= user?._id || "" %>';
+  window.currentUsername = '<%= user?.username || "" %>';
+</script>
+
 <%- include('partials/footer') %>
