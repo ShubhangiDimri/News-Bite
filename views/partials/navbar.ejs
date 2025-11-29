@@ -13,7 +13,7 @@
       >
       <% } %>
       <a href="/profile" class="nav-link">Profile</a>
-      <a href="/logout" class="nav-link">Logout</a>
+      <a href="#" class="nav-link" id="logoutBtn">Logout</a>
       <% } else { %>
       <a href="/login" class="nav-link">Login</a>
       <a href="/register" class="btn btn-primary">Sign Up</a>
@@ -21,3 +21,23 @@
     </div>
   </div>
 </nav>
+
+<script>
+  // Logout confirmation
+  document.addEventListener('DOMContentLoaded', () => {
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        
+        // Show custom confirmation dialog
+        const confirmed = confirm('Are you sure you want to logout from this account?');
+        
+        if (confirmed) {
+          // Redirect to logout
+          window.location.href = '/logout';
+        }
+      });
+    }
+  });
+</script>
