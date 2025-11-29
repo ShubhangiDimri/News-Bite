@@ -287,9 +287,32 @@
                           data-news-id="<%= item._id %>"
                           data-comment-id="<%= comment._id %>"
                           data-reply-id="<%= reply._id %>"
-                          style="color: #ef4444; background: none; border: none; cursor: pointer; font-size: 0.7rem; margin-left: 0.5rem;"
+                          title="Delete reply"
+                          style="
+                            background: none;
+                            border: none;
+                            color: #ef4444;
+                            cursor: pointer;
+                            padding: 0.2rem;
+                            margin-left: 0.2rem;
+                          "
                         >
-                          Delete
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          >
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path
+                              d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                            ></path>
+                          </svg>
                         </button>
                         <% } %>
                         <!-- DEBUG: User: <%= user?.username %>, Reply User: <%= reply.username %> -->

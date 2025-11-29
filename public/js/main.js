@@ -16,16 +16,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const moonIcon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
     </svg>`;
-    
+
     // Apply saved theme
     document.documentElement.setAttribute('data-theme', currentTheme);
     if (themeToggle) {
         themeToggle.innerHTML = currentTheme === 'dark' ? sunIcon : moonIcon;
-        
+
         // Theme toggle event
         themeToggle.addEventListener('click', () => {
             const newTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-            
+
             document.documentElement.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
             themeToggle.innerHTML = newTheme === 'dark' ? sunIcon : moonIcon;
@@ -139,61 +139,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await res.json();
 
                 if (res.ok) {
-                    input.value = '';
-                    const list = document.getElementById(`comments-${newsId}`);
-
-                    // Remove "No comments yet" if it exists
-                    if (list.children.length === 1 && list.children[0].textContent === 'No comments yet.') {
-                        list.innerHTML = '';
-                    }
-
-                    // Create new comment element
-                    const div = document.createElement('div');
-                    div.className = 'comment-item';
-                    div.innerHTML = `
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                            <span class="comment-user">${data.comment.username}</span>
-                            <div class="comment-actions" style="display: flex; gap: 0.2rem; align-items: center;">
-                                <button class="vote-btn upvote-btn" 
-                                    data-news-id="${newsId}" 
-                                    data-comment-id="${data.comment._id}" 
-                                    data-type="up">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
-                                </button>
-                                <span class="vote-score">0</span>
-                                <button class="vote-btn downvote-btn" 
-                                    data-news-id="${newsId}" 
-                                    data-comment-id="${data.comment._id}" 
-                                    data-type="down">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"></path></svg>
-                                </button>
-                                <button class="reply-toggle-btn" data-id="${data.comment._id}">Reply</button>
-                                <button
-                                    class="delete-btn"
-                                    data-news-id="${newsId}"
-                                    data-comment-id="${data.comment._id}"
-                                    title="Delete comment"
-                                    style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 0.2rem; margin-left: 0.2rem;"
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="comment-text">${comment}</div>
-                        
-                        <!-- Reply Form Placeholder -->
-                        <form class="reply-form" id="reply-form-${data.comment._id}" data-news-id="${newsId}" data-comment-id="${data.comment._id}" style="display: none; margin-top: 0.5rem;">
-                            <div style="display: flex; gap: 0.5rem;">
-                                <input type="text" class="reply-input form-input" placeholder="Write a reply..." required>
-                                <button type="submit" class="btn btn-primary">Reply</button>
-                            </div>
-                        </form>
-                    `;
-
-                    // Prepend to list
-                    list.insertBefore(div, list.firstChild);
-
                     showToast('Comment added');
+                    // Reload the page to show the new comment and ensure persistence
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 500);
                 } else {
                     showToast(data.message || 'Error adding comment');
                 }
@@ -454,58 +404,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await res.json();
 
                 if (res.ok) {
-                    input.value = '';
-                    form.style.display = 'none';
-
-                    // Find or create replies list
-                    let repliesList = form.previousElementSibling;
-                    if (!repliesList || !repliesList.classList.contains('replies-list')) {
-                        repliesList = document.createElement('div');
-                        repliesList.className = 'replies-list';
-                        repliesList.style.cssText = "margin-left: 1rem; margin-top: 0.5rem; border-left: 2px solid var(--glass-border); padding-left: 0.5rem;";
-                        form.parentNode.insertBefore(repliesList, form);
-                    }
-
-                    const replyDiv = document.createElement('div');
-                    replyDiv.className = 'reply-item';
-                    replyDiv.id = `reply-${data.reply._id}`;
-                    replyDiv.style.cssText = "margin-bottom: 0.5rem;";
-                    replyDiv.innerHTML = `
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span style="color: var(--primary-color); font-size: 0.8rem;">${data.reply.username}:</span>
-                            <div class="reply-actions" style="display: flex; gap: 0.3rem; align-items: center;">
-                                <button class="vote-btn upvote-btn small" 
-                                    data-news-id="${newsId}" 
-                                    data-comment-id="${commentId}" 
-                                    data-reply-id="${data.reply._id}" 
-                                    data-type="up">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
-                                </button>
-                                <span class="vote-score small">0</span>
-                                <button class="vote-btn downvote-btn small" 
-                                    data-news-id="${newsId}" 
-                                    data-comment-id="${commentId}" 
-                                    data-reply-id="${data.reply._id}" 
-                                    data-type="down">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"></path></svg>
-                                </button>
-                                <button
-                                    class="delete-btn"
-                                    data-news-id="${newsId}"
-                                    data-comment-id="${commentId}"
-                                    data-reply-id="${data.reply._id}"
-                                    title="Delete reply"
-                                    style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 0.2rem; margin-left: 0.5rem;"
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                                </button>
-                            </div>
-                        </div>
-                        <div style="font-size: 0.9rem; color: var(--text-muted);">${comment}</div>
-                    `;
-
-                    repliesList.appendChild(replyDiv);
                     showToast('Reply added');
+                    // Reload the page to show the new reply and ensure persistence
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 500);
                 } else {
                     showToast(data.message || 'Error adding reply');
                 }
