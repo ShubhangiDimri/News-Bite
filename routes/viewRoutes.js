@@ -147,6 +147,7 @@ router.get('/search', async (req, res) => {
     const category = req.query.category || '';
     const startDate = req.query.startDate || '';
     const endDate = req.query.endDate || '';
+    const sortBy = req.query.sortBy || 'newest';
 
     let results = [];
 
@@ -179,6 +180,14 @@ router.get('/search', async (req, res) => {
             };
 
             results = await fetchNewsFromAPI(options);
+
+            // Sort results based on sortBy parameter
+            if (sortBy === 'oldest') {
+                results.sort((a, b) => new Date(a.publishedAt) - new Date(b.publishedAt));
+            } else {
+                // Default to newest
+                results.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
+            }
         } catch (err) {
             console.error(err);
         }
@@ -190,6 +199,7 @@ router.get('/search', async (req, res) => {
         category,
         startDate,
         endDate,
+        sortBy,
         results
     });
 });
