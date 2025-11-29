@@ -24,9 +24,11 @@ router.get('/', async (req, res) => {
         const totalPages = Math.ceil(totalNews / limit);
 
         const news = await News.find()
-            .sort({ publishedAt: -1 })
+            .sort({ likes: -1, publishedAt: -1 })
             .skip(skip)
             .limit(limit);
+
+        console.log('News sorted by likes:', news.map(n => ({ title: n.title, likes: n.likes })));
 
         let userInteractions = {};
         if (req.user) {
