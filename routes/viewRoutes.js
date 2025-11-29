@@ -96,8 +96,15 @@ router.get('/profile', authMiddleware, async (req, res) => {
 
 router.get('/activity', authMiddleware, async (req, res) => {
     try {
-        // Fetch Activity
-        const activity = await UserNews.find({ username: req.user.username })
+        // Fetch Activity - only items with actual interactions
+        const activity = await UserNews.find({ 
+            username: req.user.username,
+            $or: [
+                { likes: { $gt: 0 } },
+                { bookmarked: true },
+                { comments: { $exists: true, $not: { $size: 0 } } }  // has comments
+            ]
+        })
             .sort({ createdAt: -1 })
             .limit(20);
 

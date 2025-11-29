@@ -10,7 +10,14 @@ exports.activity = async (req, res) => {
   logger.info('Fetch user activity', { username });
 
   try {
-    const userNews = await UserNews.find({ username })
+    const userNews = await UserNews.find({ 
+        username,
+        $or: [
+            { likes: { $gt: 0 } },
+            { bookmarked: true },
+            { comments: { $exists: true, $not: { $size: 0 } } }  // has comments
+        ]
+    })
       .select("news_id comments likes bookmarked createdAt")
       .sort({ createdAt: -1 }); // Sort by newest first
 
