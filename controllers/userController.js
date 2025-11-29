@@ -96,26 +96,24 @@ exports.uploadPhoto = async (req, res) => {
 
 // Remove profile photo
 exports.removePhoto = async (req, res) => {
+  console.log(`[removePhoto] ===== FUNCTION CALLED =====`);
   try {
     const userId = req.user.userId;
+    console.log(`[removePhoto] userId: ${userId}`);
 
-    console.log(`[removePhoto] Attempting to remove photo for userId: ${userId}`);
-
-    // Explicitly set to null using updateOne which can be more reliable than findByIdAndUpdate for some schema configs
+    // Set to empty string to match schema default
     const result = await User.updateOne(
       { _id: userId },
-      { $set: { photo: null } }
+      { $set: { photo: "" } }
     );
 
-    console.log(`[removePhoto] Update result:`, result);
+    console.log(`[removePhoto] Update result - matched: ${result.matchedCount}, modified: ${result.modifiedCount}`);
 
     // Verify the update
     const updatedUser = await User.findById(userId).select('photo');
-    console.log(`[removePhoto] Verification - Photo exists?`, !!updatedUser.photo);
-    console.log(`[removePhoto] Verification - Photo length:`, updatedUser.photo ? updatedUser.photo.length : 0);
+    console.log(`[removePhoto] After update - photo length: ${updatedUser.photo ? updatedUser.photo.length : 0}`);
 
     if (result.matchedCount === 0) {
-      console.log(`[removePhoto] User not found`);
       return res.status(404).json({ message: "User not found" });
     }
 
@@ -125,7 +123,7 @@ exports.removePhoto = async (req, res) => {
     });
 
   } catch (err) {
-    console.log("Error removing photo:", err);
+    console.log("[removePhoto] Error:", err);
     res.status(500).json({ message: "Error removing photo", success: false });
   }
 };

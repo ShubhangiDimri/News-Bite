@@ -28,8 +28,6 @@ router.get('/', async (req, res) => {
             .skip(skip)
             .limit(limit);
 
-        console.log('News sorted by likes:', news.map(n => ({ title: n.title, likes: n.likes })));
-
         let userInteractions = {};
         if (req.user) {
             const interactions = await UserNews.find({ username: req.user.username });
@@ -76,10 +74,6 @@ router.get('/profile', authMiddleware, async (req, res) => {
     try {
         // Fetch full user details including photo
         const user = await User.findById(req.user.userId).select('username bio_data photo');
-
-        console.log(`[viewProfile] Rendering profile for userId: ${req.user.userId}`);
-        console.log(`[viewProfile] Photo length from DB: ${user?.photo?.length || 0}`);
-        console.log(`[viewProfile] Photo exists? ${!!user?.photo}`);
 
         res.render('profile', {
             title: 'Profile',

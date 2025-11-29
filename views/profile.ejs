@@ -40,12 +40,15 @@
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 4rem;
+          font-size: 3.5rem;
           font-weight: 700;
           color: white;
-          border: 4px solid var(--glass-border);
-          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+          box-shadow: inset 0 0 0 4px var(--glass-border),
+            0 8px 32px rgba(0, 0, 0, 0.3);
           text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+          line-height: 1;
+          overflow: hidden;
+          padding-top: 8px;
         "
       >
         <%= user.username.charAt(0).toUpperCase() %>
@@ -169,6 +172,32 @@
   // Profile Photo Upload
   const cameraIcon = document.getElementById("cameraIcon");
   const fileInput = document.getElementById("photoInput");
+
+  // Function to remove profile photo - defined first so it's available in modal
+  async function removeProfilePhoto() {
+    console.log("[DEBUG] removeProfilePhoto function called");
+    try {
+      const res = await fetch("/api/user/remove-photo", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (res.ok) {
+        // Force reload to clear cache and update UI with timestamp
+        window.location.href =
+          window.location.pathname + "?t=" + new Date().getTime();
+      } else {
+        const data = await res.json();
+        console.error("Remove photo failed:", data);
+        alert(data.message || "Error removing photo");
+      }
+    } catch (err) {
+      console.error("Remove photo error:", err);
+      alert("Error removing photo");
+    }
+  }
 
   // Create custom modal for photo options
   function showPhotoOptionsModal() {
@@ -310,6 +339,7 @@
     });
 
     removeBtn.addEventListener("click", () => {
+      console.log("[DEBUG] Remove button clicked");
       modal.remove();
       removeProfilePhoto();
     });
@@ -342,35 +372,6 @@
         fileInput.click();
       }
     });
-
-    // Function to remove profile photo
-    async function removeProfilePhoto() {
-      console.log("Initiating remove profile photo...");
-      try {
-        const res = await fetch("/api/user/remove-photo", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-
-        console.log("Remove photo response status:", res.status);
-
-        if (res.ok) {
-          console.log("Remove photo success, reloading...");
-          // Force reload to clear cache and update UI with timestamp
-          window.location.href =
-            window.location.pathname + "?t=" + new Date().getTime();
-        } else {
-          const data = await res.json();
-          console.error("Remove photo failed:", data);
-          alert(data.message || "Error removing photo");
-        }
-      } catch (err) {
-        console.error("Remove photo error:", err);
-        alert("Error removing photo");
-      }
-    }
 
     fileInput.addEventListener("change", async (e) => {
       if (!e.target.files || !e.target.files[0]) return;
