@@ -150,7 +150,17 @@ router.get('/search', async (req, res) => {
 
     let results = [];
 
-    if (query || category) {
+    const CATEGORIES = [
+        "business",
+        "entertainment",
+        "general",
+        "health",
+        "science",
+        "sports",
+        "technology",
+    ];
+
+    if (query || category || startDate || endDate) {
         try {
             // If category is selected but no query, use category as query
             const searchTerms = query ? query.split(',').map(s => s.trim()).filter(Boolean) : [];
@@ -158,8 +168,12 @@ router.get('/search', async (req, res) => {
                 searchTerms.push(category);
             }
 
+            // Default to searching all categories if no query or category is provided
+            // This simulates "All Categories" behavior by searching for any of the main topics
+            const finalQueries = searchTerms.length > 0 ? searchTerms : (category ? [category] : [CATEGORIES.join(' OR ')]);
+
             const options = {
-                queries: searchTerms.length > 0 ? searchTerms : [category],
+                queries: finalQueries,
                 from: startDate,
                 to: endDate
             };
@@ -199,23 +213,23 @@ router.get('/admin', authMiddleware, async (req, res) => {
         // Get registration statistics (last 30 days)
         const registrationStats = [];
         const today = new Date();
-        
+
         for (let i = 29; i >= 0; i--) {
             const date = new Date(today);
             date.setDate(date.getDate() - i);
-            
+
             const startOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0);
             const endOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59);
-            
+
             const count = await User.countDocuments({
                 createdAt: { $gte: startOfDay, $lte: endOfDay }
             });
-            
+
             const year = date.getFullYear();
             const month = String(date.getMonth() + 1).padStart(2, '0');
             const day = String(date.getDate()).padStart(2, '0');
             const dateStr = `${year}-${month}-${day}`;
-            
+
             registrationStats.push({
                 date: dateStr,
                 count: count

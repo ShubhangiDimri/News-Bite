@@ -42,15 +42,21 @@
     </form>
   </div>
 
-  <% if (query || category) { %>
-  <h2 class="section-title">Results for "<%= query || category %>"</h2>
+  <% if (query || category || startDate || endDate) { %>
+  <h2 class="section-title">
+    Results
+    <%= query ? `for "${query}"` : '' %>
+    <%= category ? `in ${category}` : '' %>
+    <%= startDate ? `from ${startDate}` : '' %>
+    <%= endDate ? `to ${endDate}` : '' %>
+  </h2>
   <div class="news-grid">
     <% if (results && results.length > 0) { %> <% results.forEach(item => { %>
     <article class="news-card">
       <div class="news-content">
         <div class="news-meta">
             <span class="news-source"><%= item.source.name || item.source %></span>
-            <span class="news-date"><%= new Date(item.publishedAt).toLocaleDateString() %></span>
+            <span class="news-date"><%= new Date(item.publishedAt).toISOString().split('T')[0] %></span>
         </div>
         <h2 class="news-title">
           <a href="<%= item.url %>" target="_blank"><%= item.title %></a>
