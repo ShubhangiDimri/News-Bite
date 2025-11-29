@@ -6,6 +6,7 @@ const User = require('../models/User');
 const Activity = require('../models/Activity');
 
 // Helper function to handle voting logic
+// Helper function to handle voting logic
 async function handleVote(type, userId, voteType, itemId, parentId = null) {
   logger.info(`Vote attempt`, {
     type,
@@ -16,23 +17,28 @@ async function handleVote(type, userId, voteType, itemId, parentId = null) {
   });
 
   try {
-    let userNews;
+    let newsItem;
     let target;
 
     if (type === 'comment') {
-      userNews = await UserNews.findOne({ 'comments._id': itemId });
-      if (!userNews) {
-        logger.warn('Vote failed - comment not found', { itemId });
+      // Find news containing the comment
+      newsItem = await News.findOne({ 'comments._id': itemId });
+      if (!newsItem) {
+        logger.warn('Vote failed - comment not found in any news', { itemId });
         throw new Error('Comment not found');
       }
-      target = userNews.comments.id(itemId);
+      target = newsItem.comments.id(itemId);
     } else if (type === 'reply') {
-      userNews = await UserNews.findOne({ 'comments._id': parentId });
-      if (!userNews) {
-        logger.warn('Vote failed - parent comment not found', { parentId });
+      // Find news containing the parent comment
+      newsItem = await News.findOne({ 'comments._id': parentId });
+      if (!newsItem) {
+        logger.warn('Vote failed - parent comment not found in any news', { parentId });
         throw new Error('Parent comment not found');
       }
-      const parentComment = userNews.comments.id(parentId);
+      const parentComment = newsItem.comments.id(parentId);
+      if (!parentComment) {
+        throw new Error('Parent comment not found');
+      }
       target = parentComment.replies.id(itemId);
     }
 
@@ -80,7 +86,7 @@ async function handleVote(type, userId, voteType, itemId, parentId = null) {
     // Update score
     target.score = target.upvotes.length - target.downvotes.length;
 
-    await userNews.save();
+    await newsItem.save();
     logger.info('Vote recorded successfully', {
       type,
       score: target.score,
@@ -102,8 +108,8 @@ async function handleVote(type, userId, voteType, itemId, parentId = null) {
 
 // Vote on comment
 exports.voteComment = async (req, res) => {
-  const { commentId } = req.params;
-  const { voteType } = req.body;
+  // FIXED: Get commentId from body, not params, matching the route definition
+  const { commentId, voteType } = req.body;
   const userId = req.user.userId;
 
   logger.info('Comment vote attempt', { commentId, voteType, userId });
@@ -133,9 +139,9 @@ exports.voteComment = async (req, res) => {
 
     res.json({
       message: "Vote recorded",
-      score: comment.score,
-      upvoted: comment.upvotes.includes(userId),
-      downvoted: comment.downvotes.includes(userId)
+      score: result.score,
+      upvoted: result.upvotes.includes(userId),
+      downvoted: result.downvotes.includes(userId)
     });
   } catch (error) {
     logger.error('Vote error', { error: error.message });
@@ -175,9 +181,9 @@ exports.voteReply = async (req, res) => {
 
     res.json({
       message: "Vote recorded",
-      score: reply.score,
-      upvoted: reply.upvotes.includes(userId),
-      downvoted: reply.downvotes.includes(userId)
+      score: result.score,
+      upvoted: result.upvotes.includes(userId),
+      downvoted: result.downvotes.includes(userId)
     });
   } catch (error) {
     logger.error('Vote error', { error: error.message });

@@ -116,10 +116,34 @@ document.addEventListener('DOMContentLoaded', () => {
                     const div = document.createElement('div');
                     div.className = 'comment-item';
                     div.innerHTML = `
-                        <div style="display: flex; justify-content: space-between;">
-                            <span class="comment-user">You</span>
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <span class="comment-user">${data.comment.username}</span>
+                            <div class="comment-actions" style="display: flex; gap: 0.2rem; align-items: center;">
+                                <button class="vote-btn upvote-btn" 
+                                    data-news-id="${newsId}" 
+                                    data-comment-id="${data.comment._id}" 
+                                    data-type="up">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
+                                </button>
+                                <span class="vote-score">0</span>
+                                <button class="vote-btn downvote-btn" 
+                                    data-news-id="${newsId}" 
+                                    data-comment-id="${data.comment._id}" 
+                                    data-type="down">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"></path></svg>
+                                </button>
+                                <button class="reply-toggle-btn" data-id="${data.comment._id}">Reply</button>
+                            </div>
                         </div>
                         <div class="comment-text">${comment}</div>
+                        
+                        <!-- Reply Form Placeholder -->
+                        <form class="reply-form" id="reply-form-${data.comment._id}" data-news-id="${newsId}" data-comment-id="${data.comment._id}" style="display: none; margin-top: 0.5rem;">
+                            <div style="display: flex; gap: 0.5rem;">
+                                <input type="text" class="reply-input form-input" placeholder="Write a reply..." required>
+                                <button type="submit" class="btn btn-primary">Reply</button>
+                            </div>
+                        </form>
                     `;
 
                     // Prepend to list
@@ -305,11 +329,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     replyDiv.style.cssText = "margin-bottom: 0.5rem;";
                     replyDiv.innerHTML = `
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span style="color: var(--primary-color); font-size: 0.8rem;">You:</span>
+                            <span style="color: var(--primary-color); font-size: 0.8rem;">${data.reply.username}:</span>
                             <div class="reply-actions" style="display: flex; gap: 0.3rem; align-items: center;">
-                                <button class="vote-btn upvote-btn small">▲</button>
+                                <button class="vote-btn upvote-btn small" 
+                                    data-news-id="${newsId}" 
+                                    data-comment-id="${commentId}" 
+                                    data-reply-id="${data.reply._id}" 
+                                    data-type="up">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
+                                </button>
                                 <span class="vote-score small">0</span>
-                                <button class="vote-btn downvote-btn small">▼</button>
+                                <button class="vote-btn downvote-btn small" 
+                                    data-news-id="${newsId}" 
+                                    data-comment-id="${commentId}" 
+                                    data-reply-id="${data.reply._id}" 
+                                    data-type="down">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"></path></svg>
+                                </button>
                             </div>
                         </div>
                         <div style="font-size: 0.9rem; color: var(--text-muted);">${comment}</div>

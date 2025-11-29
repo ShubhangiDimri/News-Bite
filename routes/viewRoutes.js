@@ -72,9 +72,16 @@ router.get('/register', (req, res) => {
 
 router.get('/profile', authMiddleware, async (req, res) => {
     try {
+        // Fetch full user details including photo
+        const user = await User.findById(req.user.userId).select('username bio_data photo');
+
         res.render('profile', {
             title: 'Profile',
-            user: req.user
+            user: {
+                ...req.user,
+                bio_data: user.bio_data,
+                profileImage: user.photo
+            }
         });
     } catch (err) {
         console.error(err);
