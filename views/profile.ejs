@@ -5,31 +5,85 @@
     <div
       class="profile-avatar"
       id="profileAvatar"
-      style="cursor: pointer; overflow: hidden; position: relative"
+      style="
+        position: relative;
+        display: inline-block;
+        background: transparent;
+        box-shadow: none;
+        width: auto;
+        height: auto;
+      "
     >
       <% if (user.profileImage) { %>
       <img
         id="avatarImage"
         src="<%= user.profileImage %>"
         alt="Profile"
-        style="width: 100%; height: 100%; object-fit: cover"
+        style="
+          width: 150px;
+          height: 150px;
+          object-fit: cover;
+          border-radius: 50%;
+          display: block;
+        "
       />
-      <% } else { %> <%= user.username.charAt(0).toUpperCase() %> <% } %>
+      <% } else { %>
       <div
-        class="avatar-overlay"
+        style="
+          width: 150px;
+          height: 150px;
+          border-radius: 50%;
+          background: var(--glass-bg);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 3rem;
+          color: var(--text-main);
+          border: 1px solid var(--glass-border);
+        "
+      >
+        <%= user.username.charAt(0).toUpperCase() %>
+      </div>
+      <% } %>
+
+      <!-- Camera Icon Overlay (Pop-out) -->
+      <div
+        id="cameraIcon"
         style="
           position: absolute;
           bottom: 0;
-          left: 0;
           right: 0;
-          background: rgba(0, 0, 0, 0.5);
+          transform: translate(10%, 10%);
+          background: #26bbdc;
           color: white;
-          font-size: 0.8rem;
-          padding: 2px 0;
-          display: none;
+          border-radius: 50%;
+          width: 40px;
+          height: 40px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+          border: 3px solid var(--bg-color);
+          cursor: pointer;
+          z-index: 10;
         "
       >
-        Edit
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path
+            d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"
+          ></path>
+          <circle cx="12" cy="13" r="4"></circle>
+        </svg>
       </div>
     </div>
     <input type="file" id="photoInput" accept="image/*" style="display: none" />
@@ -70,54 +124,48 @@
         </button>
       </form>
     </div>
-
-    <!-- Activity Section -->
-    <div style="margin-top: 2rem; width: 100%; max-width: 600px">
-      <button
-        id="showActivityBtn"
-        class="btn btn-outline"
-        style="width: auto; padding: 0.5rem 2rem"
-      >
-        Show Activity
-      </button>
-
-      <div
-        id="activityContainer"
-        style="display: none; margin-top: 1rem; text-align: left"
-      >
-        <h3 style="margin-bottom: 1rem">Recent Activity</h3>
-        <div id="activityList">
-          <!-- Activity items will be loaded here -->
-        </div>
-      </div>
-    </div>
   </div>
 
-  <!-- Logout Section -->
+  <!-- Activity Section (Moved to bottom, full width) -->
   <div
     style="
       margin-top: 3rem;
       text-align: center;
       border-top: 1px solid var(--glass-border);
       padding-top: 2rem;
+      width: 100%;
     "
   >
-    <a
-      href="/logout"
+    <button
+      id="showActivityBtn"
       class="btn btn-outline"
-      style="color: var(--danger-color); border-color: var(--danger-color)"
-      >Logout</a
+      style="width: auto; padding: 0.5rem 2rem"
     >
+      Show Activity
+    </button>
+
+    <div
+      id="activityContainer"
+      style="display: none; margin-top: 2rem; text-align: left; width: 100%"
+    >
+      <h3 style="margin-bottom: 1rem; text-align: center">Recent Activity</h3>
+      <div id="activityList" style="width: 100%">
+        <!-- Activity items will be loaded here -->
+      </div>
+    </div>
   </div>
 </div>
 
 <script>
   // Profile Photo Upload
-  const avatar = document.getElementById("profileAvatar");
+  const cameraIcon = document.getElementById("cameraIcon");
   const fileInput = document.getElementById("photoInput");
 
-  if (avatar && fileInput) {
-    avatar.addEventListener("click", () => fileInput.click());
+  if (cameraIcon && fileInput) {
+    cameraIcon.addEventListener("click", (e) => {
+      e.stopPropagation(); // Prevent bubbling if any
+      fileInput.click();
+    });
 
     fileInput.addEventListener("change", async (e) => {
       if (!e.target.files || !e.target.files[0]) return;
@@ -139,8 +187,9 @@
           if (img) {
             img.src = data.profileImage;
           } else {
-            // If it was text before, replace with img
-            avatar.innerHTML = `<img id="avatarImage" src="${data.profileImage}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover;">`;
+            // If it was text/placeholder before, we need to reload or replace the container content
+            // For simplicity, let's reload to ensure proper structure if switching from text to img
+            window.location.reload();
           }
           alert("Profile photo updated!");
         } else {
