@@ -67,7 +67,7 @@ const removeExisting = async (articles) => {
 };
 
 // Fetch recent articles from NewsAPI
-async function fetchNewsFromAPI({ queries = CATEGORIES, pageSize = 20 } = {}) {
+async function fetchNewsFromAPI({ queries = CATEGORIES, pageSize = 20, from, to } = {}) {
   if (!NEWS_API_KEY) {
     console.error("NEWS_API_KEY is missing in .env");
     return [];
@@ -77,14 +77,19 @@ async function fetchNewsFromAPI({ queries = CATEGORIES, pageSize = 20 } = {}) {
 
   for (const q of queries) {
     try {
+      const params = {
+        q,
+        language: "en",
+        sortBy: "publishedAt",
+        pageSize,
+        apiKey: NEWS_API_KEY,
+      };
+
+      if (from) params.from = from;
+      if (to) params.to = to;
+
       const resp = await axios.get("https://newsapi.org/v2/everything", {
-        params: {
-          q,
-          language: "en",
-          sortBy: "publishedAt",
-          pageSize,
-          apiKey: NEWS_API_KEY,
-        },
+        params,
         timeout: 8000,
       });
 

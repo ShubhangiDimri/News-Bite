@@ -1,0 +1,540 @@
+<%- include('partials/header') %> <%- include('partials/navbar') %>
+
+<div class="container">
+  <div class="profile-header" style="margin-top: 3rem">
+    <div
+      class="profile-avatar"
+      id="profileAvatar"
+      style="
+        position: relative;
+        display: inline-block;
+        background: transparent;
+        box-shadow: none;
+        width: auto;
+        height: auto;
+      "
+    >
+      <% if (user.profileImage && user.profileImage.trim() !== '') { %>
+      <img
+        id="avatarImage"
+        src="<%= user.profileImage %>"
+        alt="Profile"
+        style="
+          width: 150px;
+          height: 150px;
+          object-fit: cover;
+          border-radius: 50%;
+          display: block;
+          border: 4px solid var(--glass-border);
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        "
+      />
+      <% } else { %>
+      <div
+        id="defaultAvatar"
+        style="
+          width: 150px;
+          height: 150px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, var(--primary-color), #3b82f6);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 3.5rem;
+          font-weight: 700;
+          color: white;
+          box-shadow: inset 0 0 0 4px var(--glass-border),
+            0 8px 32px rgba(0, 0, 0, 0.3);
+          text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+          line-height: 1;
+          overflow: hidden;
+          padding-top: 8px;
+        "
+      >
+        <%= user.username.charAt(0).toUpperCase() %>
+      </div>
+      <% } %>
+
+      <!-- Camera Icon Overlay (Pop-out) -->
+      <div
+        id="cameraIcon"
+        style="
+          position: absolute;
+          bottom: 0;
+          right: 0;
+          transform: translate(10%, 10%);
+          background: linear-gradient(135deg, #26bbdc, #1e9bb8);
+          color: white;
+          border-radius: 50%;
+          width: 42px;
+          height: 42px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+          border: 3px solid var(--bg-color);
+          cursor: pointer;
+          z-index: 10;
+          transition: transform 0.2s ease;
+        "
+        onmouseover="this.style.transform='scale(1.1)'"
+        onmouseout="this.style.transform='scale(1)'"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path
+            d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"
+          ></path>
+          <circle cx="12" cy="13" r="4"></circle>
+        </svg>
+      </div>
+    </div>
+    <input type="file" id="photoInput" accept="image/*" style="display: none" />
+
+    <h1 class="profile-name"><%= user.username %></h1>
+    <% if (user.bio_data) { %>
+    <p class="profile-bio"><%= user.bio_data %></p>
+    <% } else { %>
+    <p class="profile-bio" style="color: var(--text-muted); font-style: italic">
+      No bio yet. Add one below!
+    </p>
+    <% } %>
+
+    <!-- Bio Edit Form -->
+    <div
+      class="bio-edit-section"
+      style="max-width: 500px; margin: 1.5rem auto 0"
+    >
+      <form
+        id="bioForm"
+        style="display: flex; flex-direction: column; gap: 1rem"
+      >
+        <textarea
+          name="bio"
+          class="form-input"
+          placeholder="Tell us about yourself..."
+          rows="3"
+          style="resize: vertical; min-height: 80px"
+        >
+<%= user.bio_data || '' %></textarea
+        >
+        <button
+          type="submit"
+          class="btn btn-primary"
+          style="align-self: flex-end"
+        >
+          Save Bio
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Activity Section (Moved to bottom, full width) -->
+  <div
+    style="
+      margin-top: 3rem;
+      text-align: center;
+      border-top: 1px solid var(--glass-border);
+      padding-top: 2rem;
+      width: 100%;
+    "
+  >
+    <button
+      id="showActivityBtn"
+      class="btn btn-outline"
+      style="width: auto; padding: 0.5rem 2rem"
+    >
+      Show Activity
+    </button>
+
+    <div
+      id="activityContainer"
+      style="display: none; margin-top: 2rem; text-align: left; width: 100%"
+    >
+      <h3 style="margin-bottom: 1rem; text-align: center">Recent Activity</h3>
+      <div id="activityList" style="width: 100%">
+        <!-- Activity items will be loaded here -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Profile Photo Upload
+  const cameraIcon = document.getElementById("cameraIcon");
+  const fileInput = document.getElementById("photoInput");
+
+  // Function to remove profile photo - defined first so it's available in modal
+  async function removeProfilePhoto() {
+    console.log("[DEBUG] removeProfilePhoto function called");
+    try {
+      const res = await fetch("/api/user/remove-photo", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (res.ok) {
+        // Force reload to clear cache and update UI with timestamp
+        window.location.href =
+          window.location.pathname + "?t=" + new Date().getTime();
+      } else {
+        const data = await res.json();
+        console.error("Remove photo failed:", data);
+        alert(data.message || "Error removing photo");
+      }
+    } catch (err) {
+      console.error("Remove photo error:", err);
+      alert("Error removing photo");
+    }
+  }
+
+  // Create custom modal for photo options
+  function showPhotoOptionsModal() {
+    // Remove existing modal if any
+    const existingModal = document.getElementById("photoOptionsModal");
+    if (existingModal) existingModal.remove();
+
+    const modal = document.createElement("div");
+    modal.id = "photoOptionsModal";
+    modal.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(5px);
+    `;
+
+    const content = document.createElement("div");
+    content.style.cssText = `
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 1.5rem;
+      padding: 2.5rem;
+      box-shadow: var(--shadow-glass);
+      max-width: 420px;
+      text-align: center;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    `;
+
+    content.innerHTML = `
+      <h2 style="color: var(--text-main); margin-bottom: 2rem; font-size: 1.75rem; font-weight: 700;">Update Profile Picture</h2>
+      <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <button id="updatePhotoBtn" class="modal-btn modal-btn-primary" style="
+          padding: 1rem 1.5rem;
+          background: linear-gradient(135deg, #26bbdc, #1e9bb8);
+          color: white;
+          border: none;
+          border-radius: 1rem;
+          font-size: 1rem;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          font-weight: 600;
+          box-shadow: 0 4px 12px rgba(38, 187, 220, 0.3);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+        ">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+            <circle cx="12" cy="13" r="4"></circle>
+          </svg>
+          Update Profile Picture
+        </button>
+        <button id="removePhotoBtn" class="modal-btn modal-btn-danger" style="
+          padding: 1rem 1.5rem;
+          background: linear-gradient(135deg, #ef4444, #dc2626);
+          color: white;
+          border: none;
+          border-radius: 1rem;
+          font-size: 1rem;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          font-weight: 600;
+          box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+        ">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+          Remove Profile Picture
+        </button>
+        <button id="cancelPhotoBtn" class="modal-btn modal-btn-outline" style="
+          padding: 1rem 1.5rem;
+          background: rgba(255, 255, 255, 0.05);
+          color: var(--text-main);
+          border: 1px solid var(--glass-border);
+          border-radius: 1rem;
+          font-size: 1rem;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          font-weight: 500;
+        ">
+          Cancel
+        </button>
+      </div>
+    `;
+
+    modal.appendChild(content);
+    document.body.appendChild(modal);
+
+    // Add hover effects
+    const updateBtn = document.getElementById("updatePhotoBtn");
+    const removeBtn = document.getElementById("removePhotoBtn");
+    const cancelBtn = document.getElementById("cancelPhotoBtn");
+
+    updateBtn.addEventListener("mouseenter", () => {
+      updateBtn.style.transform = "translateY(-2px)";
+      updateBtn.style.boxShadow = "0 6px 20px rgba(38, 187, 220, 0.4)";
+    });
+    updateBtn.addEventListener("mouseleave", () => {
+      updateBtn.style.transform = "translateY(0)";
+      updateBtn.style.boxShadow = "0 4px 12px rgba(38, 187, 220, 0.3)";
+    });
+
+    removeBtn.addEventListener("mouseenter", () => {
+      removeBtn.style.transform = "translateY(-2px)";
+      removeBtn.style.boxShadow = "0 6px 20px rgba(239, 68, 68, 0.4)";
+    });
+    removeBtn.addEventListener("mouseleave", () => {
+      removeBtn.style.transform = "translateY(0)";
+      removeBtn.style.boxShadow = "0 4px 12px rgba(239, 68, 68, 0.3)";
+    });
+
+    cancelBtn.addEventListener("mouseenter", () => {
+      cancelBtn.style.background = "rgba(255, 255, 255, 0.1)";
+      cancelBtn.style.borderColor = "var(--text-muted)";
+    });
+    cancelBtn.addEventListener("mouseleave", () => {
+      cancelBtn.style.background = "rgba(255, 255, 255, 0.05)";
+      cancelBtn.style.borderColor = "var(--glass-border)";
+    });
+
+    // Button event listeners
+    updateBtn.addEventListener("click", () => {
+      modal.remove();
+      fileInput.click();
+    });
+
+    removeBtn.addEventListener("click", () => {
+      console.log("[DEBUG] Remove button clicked");
+      modal.remove();
+      removeProfilePhoto();
+    });
+
+    cancelBtn.addEventListener("click", () => {
+      modal.remove();
+    });
+
+    // Close on outside click
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) {
+        modal.remove();
+      }
+    });
+  }
+
+  if (cameraIcon && fileInput) {
+    cameraIcon.addEventListener("click", (e) => {
+      e.stopPropagation();
+
+      // Check if user already has a profile image (img tag, not div)
+      const avatarImage = document.getElementById("avatarImage");
+      const hasProfilePhoto = avatarImage !== null;
+
+      if (hasProfilePhoto) {
+        // Show custom modal with options
+        showPhotoOptionsModal();
+      } else {
+        // No existing photo, just open file picker
+        fileInput.click();
+      }
+    });
+
+    fileInput.addEventListener("change", async (e) => {
+      if (!e.target.files || !e.target.files[0]) return;
+
+      const formData = new FormData();
+      formData.append("photo", e.target.files[0]);
+
+      try {
+        const res = await fetch("/api/user/upload-photo", {
+          method: "POST",
+          body: formData,
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          // Update image
+          const img = document.getElementById("avatarImage");
+          if (img) {
+            img.src = data.profileImage;
+          } else {
+            // If it was text/placeholder before, we need to reload or replace the container content
+            // For simplicity, let's reload to ensure proper structure if switching from text to img
+            window.location.reload();
+          }
+          alert("Profile photo updated!");
+        } else {
+          alert(data.message || "Error uploading photo");
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Error uploading photo");
+      }
+    });
+  }
+
+  // Bio Form Submission
+  document.getElementById("bioForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const bio_data = formData.get("bio");
+
+    try {
+      const res = await fetch("/api/user/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bio_data }),
+      });
+
+      const result = await res.json();
+
+      if (res.ok) {
+        alert("Bio updated successfully!");
+        const bioDisplay = document.querySelector(".profile-bio");
+        if (bioDisplay) {
+          if (bio_data) {
+            bioDisplay.textContent = bio_data;
+            bioDisplay.style.color = "var(--text-main)";
+            bioDisplay.style.fontStyle = "normal";
+          } else {
+            bioDisplay.textContent = "No bio yet. Add one below!";
+            bioDisplay.style.color = "var(--text-muted)";
+            bioDisplay.style.fontStyle = "italic";
+          }
+        }
+      } else {
+        alert(result.message || "Failed to update bio");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("An error occurred while updating bio");
+    }
+  });
+
+  // Activity Toggle
+  const activityBtn = document.getElementById("showActivityBtn");
+  const activityContainer = document.getElementById("activityContainer");
+  const activityList = document.getElementById("activityList");
+
+  if (activityBtn) {
+    activityBtn.addEventListener("click", async () => {
+      // Toggle visibility
+      if (activityContainer.style.display === "block") {
+        activityContainer.style.display = "none";
+        activityBtn.textContent = "Show Activity";
+        return;
+      }
+
+      activityContainer.style.display = "block";
+      activityBtn.textContent = "Hide Activity";
+
+      // Fetch if empty
+      if (activityList.children.length === 0) {
+        activityList.innerHTML =
+          '<div style="text-align: center; padding: 2rem;"><div class="spinner"></div></div>'; // Simple loader placeholder
+
+        try {
+          const res = await fetch("/api/user/activity");
+          const data = await res.json();
+
+          if (res.ok && data.activity) {
+            if (data.activity.length === 0) {
+              activityList.innerHTML =
+                '<p style="color: var(--text-muted); text-align: center;">No recent activity.</p>';
+              return;
+            }
+
+            activityList.innerHTML = data.activity
+              .map((item) => {
+                // Use createdAt (interaction time) if available, otherwise fallback to newsDate (published time)
+                const dateObj = item.createdAt
+                  ? new Date(item.createdAt)
+                  : item.newsDate
+                  ? new Date(item.newsDate)
+                  : null;
+                const dateStr = dateObj
+                  ? dateObj.toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    })
+                  : "Unknown Date";
+
+                let badges = "";
+                if (item.likes > 0)
+                  badges +=
+                    '<span style="color: #ef4444; margin-right: 1rem;">♥ Liked</span>';
+                if (item.bookmarked)
+                  badges +=
+                    '<span style="color: var(--primary-color); margin-right: 1rem;">💾 Saved</span>';
+                if (item.comments && item.comments.length > 0)
+                  badges +=
+                    '<span style="color: var(--text-muted);">💬 Commented</span>';
+
+                return `
+                <div class="glass-panel" style="padding: 1.5rem; margin-bottom: 1rem; border-radius: var(--radius); background: var(--glass-bg); border: 1px solid var(--glass-border);">
+                  <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+                    ${dateStr}
+                  </div>
+                  <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem;">
+                    <a href="${item.newsUrl}" target="_blank" style="color: var(--text-main); text-decoration: none;">
+                      ${item.newsTitle}
+                    </a>
+                  </h3>
+                  <div style="display: flex; flex-wrap: wrap; font-size: 0.9rem;">
+                    ${badges}
+                  </div>
+                </div>
+              `;
+              })
+              .join("");
+          } else {
+            activityList.innerHTML =
+              '<p style="text-align: center; color: var(--danger-color);">Error loading activity.</p>';
+          }
+        } catch (err) {
+          console.error(err);
+          activityList.innerHTML =
+            '<p style="text-align: center; color: var(--danger-color);">Error loading activity.</p>';
+        }
+      }
+    });
+  }
+</script>
+
+<%- include('partials/footer') %>

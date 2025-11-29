@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../middlewares/authMiddleware');
-const isAdmin = require('../middlewares/isAdmin');
+const adminMiddleware = require('../middlewares/adminMiddleware');
 const adminController = require('../controllers/adminController');
 
 // All admin routes require authentication and admin role
 router.use(authMiddleware);
-router.use(isAdmin);
+router.use(adminMiddleware);
 
 // User management routes
 router.get('/users', adminController.getAllUsers);

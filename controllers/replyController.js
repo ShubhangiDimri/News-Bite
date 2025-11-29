@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const { sanitizeText } = require("../utils/sanitizer");
 const logger = require('../utils/logging');
 const UserNews = require('../models/UserNews');
+const News = require('../models/News');
 const User = require('../models/User');
 const Activity = require('../models/Activity');
 
@@ -11,61 +12,26 @@ exports.addReply = async (req, res) => {
   const { news_id, comment } = req.body;
   const userId = req.user.userId;
   const username = req.user.username;
-  
-  logger.info('Reply attempt', {
-    commentId,
-    news_id,
-    username
-  });
 
-  if (!comment) {
-    logger.error('Reply validation failed - missing comment text', {
-      commentId,
-      news_id,
-      username
-    });
-    return res.status(400).json({ message: "Reply text is required" });
-  }
-
-  if (!news_id) {
-    logger.error('Reply validation failed - missing news_id', {
-      commentId,
-      username
-    });
-    return res.status(400).json({ message: "news_id is required" });
+  if (!comment || !news_id) {
+    return res.status(400).json({ message: "Reply text and news_id are required" });
   }
 
   try {
-    // Find the parent comment
-    const userNews = await UserNews.findOne({
-      news_id,
-      'comments._id': commentId
-    });
+    const newsItem = await News.findById(news_id);
+    if (!newsItem) {
+      return res.status(404).json({ message: "News not found" });
+    }
 
-    if (!userNews) {
-      logger.warn('Reply failed - parent comment not found', {
-        commentId,
-        news_id,
-        username
-      });
+    const parentComment = newsItem.comments.id(commentId);
+    if (!parentComment) {
       return res.status(404).json({ message: "Comment not found" });
     }
 
-    // Sanitize the reply text
     const sanitized = sanitizeText(comment);
-    if (sanitized.wasCensored) {
-      logger.warn('Reply censored', {
-        commentId,
-        news_id,
-        username,
-        censoredTerms: sanitized.censoredTerms,
-        originalLength: comment.length,
-        sanitizedLength: sanitized.text.length
-      });
-    }
-
     const replyId = new mongoose.Types.ObjectId();
-    const replyData = {
+
+    const newReply = {
       _id: replyId,
       userId: userId,
       username: username,
@@ -76,13 +42,12 @@ exports.addReply = async (req, res) => {
       parentId: commentId
     };
 
-    // Add reply to the comment
-    const parentComment = userNews.comments.id(commentId);
+    // Add reply to the parent comment
     if (!parentComment.replies) {
       parentComment.replies = [];
     }
-    parentComment.replies.push(replyData);
-    await userNews.save();
+    parentComment.replies.push(newReply);
+    await newsItem.save();
 
     await Activity.create({
       userId: userId,
@@ -104,22 +69,10 @@ exports.addReply = async (req, res) => {
 
     res.status(201).json({
       message: "Reply added successfully",
-      reply: {
-        _id: replyId,
-        username: username,
-        comment: sanitized.text || comment,
-        wasCensored: sanitized.wasCensored,
-        parentId: commentId
-      }
+      reply: newReply
     });
   } catch (error) {
-    logger.error('Reply error', {
-      error: error.message,
-      stack: error.stack,
-      commentId,
-      news_id,
-      username
-    });
+    logger.error('Reply error', { error: error.message, stack: error.stack });
     return res.status(500).json({ message: "Server error", error: error.message });
   }
 };
@@ -127,30 +80,20 @@ exports.addReply = async (req, res) => {
 // Delete reply
 exports.deleteReply = async (req, res) => {
   const { commentId, replyId } = req.params;
-
-  logger.info('Reply deletion attempt', {
-    commentId,
-    replyId,
-    userId: req.user.userId
-  });
+  const { news_id } = req.body;
 
   try {
-    const result = await UserNews.updateOne(
-      { 'comments._id': commentId },
-      { 
-        $pull: { 
-          'comments.$.replies': { _id: replyId, userId: req.user.userId }
-        }
-      }
-    );
+    const newsItem = await News.findById(news_id);
+    if (!newsItem) return res.status(404).json({ message: "News not found" });
 
-    if (result.modifiedCount === 0) {
-      logger.warn('Reply deletion failed - not found or unauthorized', {
-        commentId,
-        replyId,
-        userId: req.user.userId
-      });
-      return res.status(404).json({ message: "Reply not found or unauthorized" });
+    const parentComment = newsItem.comments.id(commentId);
+    if (!parentComment) return res.status(404).json({ message: "Comment not found" });
+
+    const reply = parentComment.replies.id(replyId);
+    if (!reply) return res.status(404).json({ message: "Reply not found" });
+
+    if (reply.userId.toString() !== req.user.userId && req.user.role !== 'admin') {
+      return res.status(403).json({ message: "Unauthorized" });
     }
 
     await Activity.create({
@@ -161,6 +104,16 @@ exports.deleteReply = async (req, res) => {
       meta: { parentId: commentId }
     });
 
+    await Activity.create({
+      userId: req.user.userId,
+      username: req.user.username,
+      action: 'reply.delete',
+      targetId: replyId,
+      meta: { parentId: commentId }
+    });
+
+    parentComment.replies.pull(replyId);
+    await newsItem.save();
     logger.info('Reply deleted successfully', {
       commentId,
       replyId,
@@ -169,13 +122,6 @@ exports.deleteReply = async (req, res) => {
 
     res.status(200).json({ message: "Reply deleted successfully" });
   } catch (error) {
-    logger.error('Reply deletion error', {
-      error: error.message,
-      stack: error.stack,
-      commentId,
-      replyId,
-      userId: req.user.userId
-    });
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
@@ -183,48 +129,20 @@ exports.deleteReply = async (req, res) => {
 // Get all replies for a comment
 exports.getReplies = async (req, res) => {
   const { commentId } = req.params;
-  const { page = 1, limit = 10 } = req.query;
-
-  logger.info('Fetching replies', {
-    commentId,
-    page,
-    limit
-  });
+  const { news_id } = req.query; // Assuming news_id is passed in query
 
   try {
-    const userNews = await UserNews.findOne(
-      { 'comments._id': commentId },
-      { 'comments.$': 1 }
-    );
+    const newsItem = await News.findById(news_id);
+    if (!newsItem) return res.status(404).json({ message: "News not found" });
 
-    if (!userNews || !userNews.comments[0]) {
-      logger.warn('Replies fetch failed - comment not found', { commentId });
-      return res.status(404).json({ message: "Comment not found" });
-    }
-
-    const replies = userNews.comments[0].replies;
-    const start = (page - 1) * limit;
-    const paginatedReplies = replies.slice(start, start + limit);
-
-    logger.info('Replies fetched successfully', {
-      commentId,
-      totalReplies: replies.length,
-      returnedReplies: paginatedReplies.length,
-      page
-    });
+    const parentComment = newsItem.comments.id(commentId);
+    if (!parentComment) return res.status(404).json({ message: "Comment not found" });
 
     res.status(200).json({
-      replies: paginatedReplies,
-      total: replies.length,
-      page: parseInt(page),
-      totalPages: Math.ceil(replies.length / limit)
+      replies: parentComment.replies,
+      total: parentComment.replies.length
     });
   } catch (error) {
-    logger.error('Replies fetch error', {
-      error: error.message,
-      stack: error.stack,
-      commentId
-    });
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };

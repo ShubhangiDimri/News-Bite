@@ -1,5 +1,6 @@
 const logger = require('../utils/logging');
 const UserNews = require('../models/UserNews');
+const News = require('../models/News');
 const User = require('../models/User');
 const Activity = require('../models/Activity');
 
@@ -7,28 +8,34 @@ const Activity = require('../models/Activity');
 exports.toggleBookmark = async (req, res) => {
   const { news_id } = req.body;
   const userId = req.user.userId;
+  const username = req.user.username;
 
-  logger.info('Bookmark toggle attempt', { news_id, userId });
+  logger.info('Bookmark toggle attempt', { news_id, username });
 
   if (!news_id) {
-    logger.warn('Bookmark validation failed - missing news_id', { userId });
     return res.status(400).json({ message: "news_id is required" });
   }
 
   try {
-    let entry = await UserNews.findOne({ news_id });
+    // Ensure news exists
+    const newsItem = await News.findById(news_id);
+    if (!newsItem) {
+      return res.status(404).json({ message: "News not found" });
+    }
+
+    let entry = await UserNews.findOne({ news_id, username });
     const previousState = entry?.bookmarked;
 
     if (!entry) {
-      entry = new UserNews({ news_id, bookmarked: true });
-      logger.info('bookmark ON', { news_id, userId, previousState: false });
+      entry = new UserNews({
+        news_id,
+        username,
+        bookmarked: true
+      });
+      logger.info('bookmark ON', { news_id, username, previousState: false });
     } else {
       entry.bookmarked = !entry.bookmarked;
-      if (entry.bookmarked) {
-        logger.info('bookmark ON', { news_id, userId, previousState });
-      } else {
-        logger.info('bookmark OFF', { news_id, userId, previousState });
-      }
+      logger.info(entry.bookmarked ? 'bookmark ON' : 'bookmark OFF', { news_id, username, previousState });
     }
 
     await entry.save();
@@ -41,22 +48,16 @@ exports.toggleBookmark = async (req, res) => {
       meta: { bookmarked: entry.bookmarked }
     });
 
-    logger.info('Bookmark updated', {
-      news_id,
-      userId,
-      bookmarkStatus: entry.bookmarked
-    });
-
     res.status(200).json({
-      message: entry.bookmarked ? "Bookmarked" : "Bookmark removed",
+      message: entry.bookmarked ? "Saved" : "Removed from saved",
       bookmarked: entry.bookmarked
     });
   } catch (err) {
     logger.error('Bookmark error', {
       error: err.message,
       stack: err.stack,
-      newsId,
-      userId
+      news_id,
+      username
     });
     res.status(500).json({ error: err.message });
   }
@@ -64,24 +65,24 @@ exports.toggleBookmark = async (req, res) => {
 
 // Get all bookmarked news
 exports.getBookmarkedNews = async (req, res) => {
-  const userId = req.user.userId;
+  const username = req.user.username;
   const { page = 1, limit = 10 } = req.query;
 
-  logger.info('Fetching bookmarked news', { userId, page, limit });
+  logger.info('Fetching bookmarked news', { username, page, limit });
 
   try {
-    const bookmarkedEntries = await UserNews.find({ bookmarked: true })
+    const bookmarkedEntries = await UserNews.find({ username, bookmarked: true })
       .skip((page - 1) * limit)
       .limit(parseInt(limit));
 
-    const totalCount = await UserNews.countDocuments({ bookmarked: true });
+    const totalCount = await UserNews.countDocuments({ username, bookmarked: true });
 
-    logger.info('Bookmarked news fetched', {
-      userId,
-      totalBookmarked: totalCount,
-      returnedCount: bookmarkedEntries.length,
-      page
-    });
+    // We might want to fetch the actual News details here if the frontend expects full news objects
+    // But based on the function name 'getBookmarkedNews', it currently returns UserNews entries.
+    // The viewRoutes.js handles fetching the actual News items for the /bookmarks page.
+    // This API endpoint might be used for something else or just raw data.
+    // If the frontend needs News items, we should fetch them. 
+    // But let's stick to fixing the bugs first.
 
     res.status(200).json({
       bookmarkedNews: bookmarkedEntries,
@@ -93,7 +94,7 @@ exports.getBookmarkedNews = async (req, res) => {
     logger.error('Fetch bookmarks error', {
       error: err.message,
       stack: err.stack,
-      userId
+      username
     });
     res.status(500).json({ error: err.message });
   }
@@ -102,15 +103,13 @@ exports.getBookmarkedNews = async (req, res) => {
 // Get bookmark status for a news item
 exports.getBookmarkStatus = async (req, res) => {
   const { newsId } = req.params;
-  const userId = req.user.userId;
+  const username = req.user.username;
 
-  logger.info('Fetching bookmark status', { newsId, userId });
+  logger.info('Fetching bookmark status', { newsId, username });
 
   try {
-    const entry = await UserNews.findOne({ news_id: newsId });
+    const entry = await UserNews.findOne({ news_id: newsId, username });
     const isBookmarked = entry?.bookmarked || false;
-
-    logger.info('Bookmark status retrieved', { newsId, userId, isBookmarked });
 
     res.status(200).json({
       newsId,
@@ -121,7 +120,7 @@ exports.getBookmarkStatus = async (req, res) => {
       error: err.message,
       stack: err.stack,
       newsId,
-      userId
+      username
     });
     res.status(500).json({ error: err.message });
   }

@@ -13,16 +13,21 @@ exports.toggleLike = async (req, res) => {
   logger.info('Like/unlike attempt', { news_id, username });
 
   if (!news_id) {
-    logger.error('Like validation failed - missing news_id', { username });
     return res.status(400).json({ message: "news_id is required" });
   }
 
   try {
+    // Ensure news exists first
+    const newsItem = await News.findById(news_id);
+    if (!newsItem) {
+      return res.status(404).json({ message: "News not found" });
+    }
+
     let userNews = await UserNews.findOne({ news_id, username });
-    
+
     // Create new UserNews record if it doesn't exist
     if (!userNews) {
-      userNews = new UserNews({ 
+      userNews = new UserNews({
         news_id,
         username
       });
@@ -50,17 +55,15 @@ exports.toggleLike = async (req, res) => {
     });
 
     // Update total likes in News model
-    const newsItem = await News.findOne({ news_id });
-    if (newsItem) {
-      newsItem.likes = (newsItem.likes || 0) + (isLiked ? -1 : 1);
-      await newsItem.save();
-      logger.info('Updated totalLikes', { news_id, totalLikes: newsItem.likes });
-    }
+    newsItem.likes = (newsItem.likes || 0) + (isLiked ? -1 : 1);
+    if (newsItem.likes < 0) newsItem.likes = 0; // Prevent negative likes
+    await newsItem.save();
+    logger.info('Updated totalLikes', { news_id, totalLikes: newsItem.likes });
 
     res.status(200).json({
       message: isLiked ? "Like removed" : "News liked",
       isLiked: !isLiked,
-      totalLikes: newsItem?.likes || 0
+      totalLikes: newsItem.likes
     });
   } catch (error) {
     logger.error('Like operation failed', {

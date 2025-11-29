@@ -1,0 +1,428 @@
+<%- include('partials/header') %> <%- include('partials/navbar') %>
+
+<div class="container">
+  <header class="feed-header">
+    <h1
+      class="feed-title"
+      style="
+        font-size: 3rem;
+        background: linear-gradient(to right, #3b82f6, #10b981);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+      "
+    >
+      Smart. Short. Swift News.
+    </h1>
+    <p style="color: var(--text-muted); font-size: 1.1rem">
+      Curated AI summaries for the modern reader.
+    </p>
+  </header>
+
+  <div class="news-grid">
+    <% if (news && news.length > 0) { %> <% news.forEach(item => { %>
+    <article class="news-card">
+      <!-- Image removed as requested -->
+      <div class="news-content">
+        <div class="news-source">
+          <%= item.source ? item.source.name : 'Unknown Source' %>
+        </div>
+        <h2 class="news-title">
+          <a href="<%= item.url %>" target="_blank"><%= item.title %></a>
+        </h2>
+        <p class="news-desc">
+          <%= item.description || item.content || 'No description available.' %>
+        </p>
+
+        <div class="news-footer">
+          <div class="news-stats">
+            <span><%= new Date(item.publishedAt).toLocaleDateString() %></span>
+            <span id="likes-count-<%= item._id %>"
+              ><%= item.likes ? item.likes : 0 %> Likes</span
+            >
+          </div>
+          <div class="news-actions">
+            <button
+              class="action-btn like-btn <%= item.isLiked ? 'liked' : '' %>"
+              data-id="<%= item._id %>"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                ></path>
+              </svg>
+            </button>
+            <button
+              class="action-btn bookmark-btn <%= item.isBookmarked ? 'active' : '' %>"
+              title="Save news"
+              data-id="<%= item._id %>"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"
+                ></path>
+              </svg>
+            </button>
+            <a
+              href="<%= item.url %>"
+              target="_blank"
+              class="action-btn"
+              style="font-size: 0.85rem"
+            >
+              ↗ Read More
+            </a>
+          </div>
+
+          <!-- Inline Comments Section -->
+          <div class="comments-section">
+            <div class="comments-list" id="comments-<%= item._id %>">
+              <% if (item.comments && item.comments.length > 0) { %> <%
+              item.comments.slice(0, 2).forEach(comment => { %>
+              <div class="comment-item" id="comment-<%= comment._id %>">
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-start;
+                  "
+                >
+                  <span class="comment-user"><%= comment.username %></span>
+                  <div
+                    class="comment-actions"
+                    style="display: flex; gap: 0.2rem; align-items: center"
+                  >
+                    <button
+                      class="vote-btn upvote-btn <%= comment.upvotes && comment.upvotes.some(id => user && user.userId && id.toString() === user.userId.toString()) ? 'active' : '' %>"
+                      data-news-id="<%= item._id %>"
+                      data-comment-id="<%= comment._id %>"
+                      data-type="up"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <path
+                          d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"
+                        ></path>
+                      </svg>
+                    </button>
+                    <span class="vote-score"><%= comment.score || 0 %></span>
+                    <button
+                      class="vote-btn downvote-btn <%= comment.downvotes && comment.downvotes.some(id => user && user.userId && id.toString() === user.userId.toString()) ? 'active' : '' %>"
+                      data-news-id="<%= item._id %>"
+                      data-comment-id="<%= comment._id %>"
+                      data-type="down"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <path
+                          d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"
+                        ></path>
+                      </svg>
+                    </button>
+                    <button
+                      class="reply-toggle-btn"
+                      data-id="<%= comment._id %>"
+                    >
+                      Reply
+                    </button>
+                    <% if (user && user.userId && comment.userId &&
+                    user.userId.toString() === comment.userId.toString()) { %>
+                    <button
+                      class="delete-btn"
+                      data-news-id="<%= item._id %>"
+                      data-comment-id="<%= comment._id %>"
+                      title="Delete comment"
+                      style="
+                        background: none;
+                        border: none;
+                        color: #ef4444;
+                        cursor: pointer;
+                        padding: 0.2rem;
+                        margin-left: 0.2rem;
+                      "
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path
+                          d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                        ></path>
+                      </svg>
+                    </button>
+                    <% } %>
+                  </div>
+                </div>
+                <div class="comment-text"><%= comment.comment %></div>
+
+                <!-- Replies -->
+                <% if (comment.replies && comment.replies.length > 0) { %>
+                <div
+                  class="replies-list"
+                  style="
+                    margin-left: 1rem;
+                    margin-top: 0.5rem;
+                    border-left: 2px solid var(--glass-border);
+                    padding-left: 0.5rem;
+                  "
+                >
+                  <% comment.replies.forEach(reply => { %>
+                  <div
+                    class="reply-item"
+                    id="reply-<%= reply._id %>"
+                    style="margin-bottom: 0.5rem"
+                  >
+                    <div
+                      style="
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                      "
+                    >
+                      <span
+                        style="color: var(--primary-color); font-size: 0.8rem"
+                        ><%= reply.username %>:</span
+                      >
+                      <div
+                        class="reply-actions"
+                        style="display: flex; gap: 0.3rem; align-items: center"
+                      >
+                        <button
+                          class="vote-btn upvote-btn small <%= reply.upvotes && reply.upvotes.some(id => user && user.userId && id.toString() === user.userId.toString()) ? 'active' : '' %>"
+                          data-news-id="<%= item._id %>"
+                          data-comment-id="<%= comment._id %>"
+                          data-reply-id="<%= reply._id %>"
+                          data-type="up"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          >
+                            <path
+                              d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"
+                            ></path>
+                          </svg>
+                        </button>
+                        <span class="vote-score small"
+                          ><%= reply.score || 0 %></span
+                        >
+                        <button
+                          class="vote-btn downvote-btn small <%= reply.downvotes && reply.downvotes.some(id => user && user.userId && id.toString() === user.userId.toString()) ? 'active' : '' %>"
+                          data-news-id="<%= item._id %>"
+                          data-comment-id="<%= comment._id %>"
+                          data-reply-id="<%= reply._id %>"
+                          data-type="down"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          >
+                            <path
+                              d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"
+                            ></path>
+                          </svg>
+                        </button>
+                        <% if (user && reply.username === user.username) { %>
+                        <button
+                          class="delete-btn"
+                          data-news-id="<%= item._id %>"
+                          data-comment-id="<%= comment._id %>"
+                          data-reply-id="<%= reply._id %>"
+                          title="Delete reply"
+                          style="
+                            background: none;
+                            border: none;
+                            color: #ef4444;
+                            cursor: pointer;
+                            padding: 0.2rem;
+                            margin-left: 0.2rem;
+                          "
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          >
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path
+                              d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                            ></path>
+                          </svg>
+                        </button>
+                        <% } %>
+                        <!-- DEBUG: User: <%= user?.username %>, Reply User: <%= reply.username %> -->
+                      </div>
+                    </div>
+                    <div style="font-size: 0.9rem; color: var(--text-muted)">
+                      <%= reply.comment %>
+                    </div>
+                  </div>
+                  <% }); %>
+                </div>
+                <% } %>
+
+                <!-- Reply Form -->
+                <form
+                  class="reply-form"
+                  id="reply-form-<%= comment._id %>"
+                  data-news-id="<%= item._id %>"
+                  data-comment-id="<%= comment._id %>"
+                  style="display: none; margin-top: 0.5rem"
+                >
+                  <div style="display: flex; gap: 0.5rem">
+                    <input
+                      type="text"
+                      class="reply-input form-input"
+                      placeholder="Write a reply..."
+                      required
+                    />
+                    <button type="submit" class="btn btn-primary">Reply</button>
+                  </div>
+                </form>
+              </div>
+              <% }); %> <% if (item.comments.length > 2) { %>
+              <button
+                class="load-more-comments-btn"
+                data-news-id="<%= item._id %>"
+                data-offset="2"
+              >
+                Load more comments (<%= item.comments.length - 2 %>)
+              </button>
+              <% } %> <% } else { %>
+              <div
+                class="comment-item no-comments"
+                style="text-align: center; color: var(--text-muted)"
+              >
+                No comments yet.
+              </div>
+              <% } %>
+            </div>
+            <form class="comment-input-group" data-id="<%= item._id %>">
+              <input
+                type="text"
+                class="comment-input"
+                placeholder="Write a comment..."
+                required
+              />
+              <button type="submit" class="send-btn">Send</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </article>
+    <% }); %> <% } else { %>
+    <div
+      style="
+        grid-column: 1/-1;
+        text-align: center;
+        padding: 4rem;
+        background: var(--glass-bg);
+        border-radius: var(--radius);
+      "
+    >
+      <h3>No news found</h3>
+      <p style="color: var(--text-muted)">
+        Check back later or try fetching new articles.
+      </p>
+    </div>
+    <% } %>
+  </div>
+
+  <!-- Pagination -->
+  <% if (totalPages > 1) { %>
+  <div
+    class="pagination"
+    style="
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 4rem;
+    "
+  >
+    <% if (currentPage > 1) { %>
+    <a href="/?page=<%= currentPage - 1 %>" class="btn btn-outline">Previous</a>
+    <% } %>
+
+    <span style="display: flex; align-items: center; color: var(--text-muted)">
+      Page <%= currentPage %> of <%= totalPages %>
+    </span>
+
+    <% if (currentPage < totalPages) { %>
+    <a href="/?page=<%= currentPage + 1 %>" class="btn btn-outline">Next</a>
+    <% } %>
+  </div>
+  <% } %>
+</div>
+
+<script>
+  // Expose current user ID for like/vote functionality
+  window.currentUserId = '<%= user?.userId || "" %>';
+  window.currentUsername = '<%= user?.username || "" %>';
+</script>
+
+<%- include('partials/footer') %>

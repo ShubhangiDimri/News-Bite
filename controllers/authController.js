@@ -9,17 +9,17 @@ const { validateUsername, validatePassword } = require('../utils/validation');
 exports.register = async (req, res) => {
     try {
         let { password, username } = req.body;
-        
+
         logger.info(`Registration attempt for username: ${username}`);
 
         // Validate username
         const usernameValidation = validateUsername(username);
         if (!usernameValidation.isValid) {
-            logger.warn(`Registration failed - Username validation failed`, { 
-                username, 
-                errors: usernameValidation.errors 
+            logger.warn(`Registration failed - Username validation failed`, {
+                username,
+                errors: usernameValidation.errors
             });
-            return res.status(400).json({ 
+            return res.status(400).json({
                 message: "Validation failed",
                 errors: {
                     username: usernameValidation.errors
@@ -33,11 +33,11 @@ exports.register = async (req, res) => {
         // Validate password
         const passwordValidation = validatePassword(password);
         if (!passwordValidation.isValid) {
-            logger.warn(`Registration failed - Password validation failed`, { 
+            logger.warn(`Registration failed - Password validation failed`, {
                 username,
-                errors: passwordValidation.errors 
+                errors: passwordValidation.errors
             });
-            return res.status(400).json({ 
+            return res.status(400).json({
                 message: "Validation failed",
                 errors: {
                     password: passwordValidation.errors
@@ -60,7 +60,7 @@ exports.register = async (req, res) => {
         // Generate token and set cookie
         const token = generateToken(user._id);
         setAuthCookie(res, token);
-        
+
         // Log registration activity
         await Activity.create({
             userId: user._id,
@@ -68,14 +68,14 @@ exports.register = async (req, res) => {
             action: 'auth.register',
             meta: { ip: req.ip }
         });
-        
+
         logger.info(`User registered successfully`, { userId: user._id, username });
         res.status(201).json({ message: 'Registration successful' });
     }
-    catch(error) {
-        logger.error(`Registration error for username: ${req.body.username}`, { 
-            error: error.message, 
-            stack: error.stack 
+    catch (error) {
+        logger.error(`Registration error for username: ${req.body.username}`, {
+            error: error.message,
+            stack: error.stack
         });
         res.status(500).json({ message: error.message });
     }
@@ -85,7 +85,7 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
     try {
         const { username, password } = req.body;
-        
+
         logger.info(`Login attempt for user: ${username}`);
 
         if (!username || !password) {
@@ -107,25 +107,29 @@ exports.login = async (req, res) => {
 
         const token = generateToken(user._id);
         setAuthCookie(res, token);
-        
+
         // Update lastLogin and log activity
         user.lastLogin = new Date();
         await user.save();
-        
+
         await Activity.create({
             userId: user._id,
             username: user.username,
             action: 'auth.login',
             meta: { ip: req.ip, userAgent: req.headers['user-agent'] }
         });
-        
+
         logger.info(`User logged in successfully`, { userId: user._id, username });
-        res.json({ message: "Login successful" });
+        res.json({
+            message: "Login successful",
+            role: user.role,
+            username: user.username
+        });
     }
-    catch(error) {
-        logger.error(`Login error for user: ${req.body.username}`, { 
-            error: error.message, 
-            stack: error.stack 
+    catch (error) {
+        logger.error(`Login error for user: ${req.body.username}`, {
+            error: error.message,
+            stack: error.stack
         });
         res.status(500).json({ message: error.message });
     }

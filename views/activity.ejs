@@ -1,0 +1,54 @@
+<%- include('partials/header') %> <%- include('partials/navbar') %>
+
+<div class="container">
+  <header class="feed-header">
+    <h1 class="feed-title" style="font-size: 2.5rem">Recent Activity</h1>
+    <p style="color: var(--text-muted); font-size: 1rem">
+      Your interactions with news articles
+    </p>
+  </header>
+
+  <div class="activity-list" style="max-width: 800px; margin: 3rem auto 0">
+    <% if (activity && activity.length > 0) { %> <% activity.forEach(act => { %>
+    <div
+      class="glass-panel"
+      style="padding: 1.5rem; margin-bottom: 1rem; border-radius: var(--radius)"
+    >
+      <div
+        style="
+          font-size: 0.9rem;
+          color: var(--text-muted);
+          margin-bottom: 0.5rem;
+        "
+      >
+        <%= act.newsDate ? new Date(act.newsDate).toLocaleDateString('en-US', {
+        year: 'numeric', month: 'short', day: 'numeric' }) : '' %>
+      </div>
+      <h3 style="margin-bottom: 0.5rem">
+        <a
+          href="<%= act.newsUrl %>"
+          target="_blank"
+          style="color: var(--text-main)"
+        >
+          <%= act.newsTitle %>
+        </a>
+      </h3>
+      <div style="display: flex; gap: 1rem; font-size: 0.9rem">
+        <% if (act.likes > 0) { %>
+        <span style="color: #ef4444">♥ Liked</span>
+        <% } %> <% if (act.bookmarked) { %>
+        <span style="color: var(--primary-color)">💾 Saved</span>
+        <% } %> <% if (act.comments && act.comments.length > 0) { %>
+        <span style="color: var(--text-muted)">💬 Commented</span>
+        <% } %>
+      </div>
+    </div>
+    <% }); %> <% } else { %>
+    <div style="text-align: center; color: var(--text-muted); padding: 2rem">
+      <p>No recent activity.</p>
+    </div>
+    <% } %>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

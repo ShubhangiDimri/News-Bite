@@ -8,16 +8,16 @@ const commentSchema = new mongoose.Schema({
   censoredTerms: [{ type: String }],              // array of terms found
   status: { type: String, enum: ['visible', 'review'], default: 'visible' },
   timestamp: { type: Date, default: Date.now },
-  
+
   // New fields for better user tracking (optional for backward compatibility)
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },  // made optional
   username: { type: String },                                     // made optional since we already have it in parent
-  
+
   // New voting fields (all optional with defaults)
   upvotes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', default: [] }],
   downvotes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', default: [] }],
   score: { type: Number, default: 0 },
-  
+
   // Replies (optional array, won't affect existing comments)
   replies: [{
     _id: { type: mongoose.Schema.Types.ObjectId, auto: true },
@@ -47,7 +47,7 @@ const userNewsSchema = new mongoose.Schema({
   likes: { type: Number, default: 0 },
   bookmarked: { type: Boolean, default: false },   //bookmarks
   comments: [commentSchema],
-});
+}, { timestamps: true });
 
 // Index news_id for faster lookups
 userNewsSchema.index({ news_id: 1 });

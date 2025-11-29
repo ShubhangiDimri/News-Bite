@@ -34,14 +34,26 @@ const newsSchema = new mongoose.Schema({
     type: Date,
   },
   likes: { type: Number, default: 0 },
-  comments: [
-    {
+  comments: [{
+    _id: { type: mongoose.Schema.Types.ObjectId, auto: true },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    username: { type: String, required: true },
+    comment: { type: String, required: true },
+    timestamp: { type: Date, default: Date.now },
+    upvotes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    downvotes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    score: { type: Number, default: 0 },
+    replies: [{
       _id: { type: mongoose.Schema.Types.ObjectId, auto: true },
+      userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
       username: { type: String, required: true },
       comment: { type: String, required: true },
-      timestamp: { type: Date, default: Date.now }
-    }
-  ],
+      timestamp: { type: Date, default: Date.now },
+      upvotes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+      downvotes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+      score: { type: Number, default: 0 }
+    }]
+  }],
   createdAt: {
     type: Date,
     default: Date.now,

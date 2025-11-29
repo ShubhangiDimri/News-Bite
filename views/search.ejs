@@ -1,0 +1,131 @@
+<%- include('partials/header') %> <%- include('partials/navbar') %>
+
+<div class="container">
+  <div class="search-section glass-panel ">
+    <form action="/search" method="GET" class="search-form">
+      <div class="search-main">
+        <input
+          type="text"
+          name="q"
+          class="form-input search-input"
+          placeholder="Search news..."
+          value="<%= query || '' %>"
+        />
+        <button type="submit" class="btn btn-primary">Search</button>
+      </div>
+      
+      <div class="search-filters">
+        <div class="filter-group">
+          <label>Category</label>
+          <select name="category" class="form-input">
+            <option value="">All Categories</option>
+            <option value="business" <%= category === 'business' ? 'selected' : '' %>>Business</option>
+            <option value="entertainment" <%= category === 'entertainment' ? 'selected' : '' %>>Entertainment</option>
+            <option value="general" <%= category === 'general' ? 'selected' : '' %>>General</option>
+            <option value="health" <%= category === 'health' ? 'selected' : '' %>>Health</option>
+            <option value="science" <%= category === 'science' ? 'selected' : '' %>>Science</option>
+            <option value="sports" <%= category === 'sports' ? 'selected' : '' %>>Sports</option>
+            <option value="technology" <%= category === 'technology' ? 'selected' : '' %>>Technology</option>
+          </select>
+        </div>
+        
+        <div class="filter-group">
+          <label>From</label>
+          <input type="date" name="startDate" class="form-input" value="<%= startDate || '' %>">
+        </div>
+        
+        <div class="filter-group">
+          <label>To</label>
+          <input type="date" name="endDate" class="form-input" value="<%= endDate || '' %>">
+        </div>
+        
+      </div>
+    </form>
+  </div>
+
+  <% if (query || category || startDate || endDate) { %>
+  <h2 class="section-title">
+    Results
+    <%= query ? `for "${query}"` : '' %>
+    <%= category ? `in ${category}` : '' %>
+    <%= startDate ? `from ${startDate}` : '' %>
+    <%= endDate ? `to ${endDate}` : '' %>
+  </h2>
+  <div class="news-grid">
+    <% if (results && results.length > 0) { %> <% results.forEach(item => { %>
+    <article class="news-card">
+      <div class="news-content">
+        <div class="news-meta">
+            <span class="news-source"><%= item.source.name || item.source %></span>
+            <span class="news-date"><%= new Date(item.publishedAt).toISOString().split('T')[0] %></span>
+        </div>
+        <h2 class="news-title">
+          <a href="<%= item.url %>" target="_blank"><%= item.title %></a>
+        </h2>
+        <p class="news-desc"><%= item.description %></p>
+        <div class="news-footer">
+          <a href="<%= item.url %>" target="_blank" class="btn btn-outline">↗ Read More</a>
+        </div>
+      </div>
+    </article>
+    <% }); %> <% } else { %>
+    <div class="no-results">
+        <p>No results found matching your criteria.</p>
+    </div>
+    <% } %>
+  </div>
+  <% } %>
+</div>
+
+<style>
+.search-section {
+    margin-bottom: 2rem;
+    padding: 2rem;
+}
+
+.search-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.search-main {
+    display: flex;
+    gap: 1rem;
+}
+
+.search-input {
+    flex: 1;
+}
+
+.search-filters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.filter-group label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.section-title {
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+}
+
+.no-results {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-secondary);
+    grid-column: 1 / -1;
+}
+</style>
+
+<%- include('partials/footer') %>

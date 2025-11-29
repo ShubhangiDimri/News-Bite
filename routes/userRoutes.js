@@ -1,5 +1,5 @@
 const express = require("express");
-const { activity, uploadPhoto } = require("../controllers/userController");
+const { activity, uploadPhoto, removePhoto } = require("../controllers/userController");
 const { addComment, deleteComment, getComments } = require("../controllers/commentController");
 const { toggleLike, getLikesCount } = require("../controllers/likeController");
 const { addReply, deleteReply, getReplies } = require("../controllers/replyController");
@@ -39,6 +39,7 @@ router.get("/likes/:news_id", getLikesCount);
 router.get("/profile/:username", viewProfile);
 router.get("/profile",authMiddleware, viewProfile);
 router.post("/upload-photo", authMiddleware, upload, uploadPhoto);
+router.post("/remove-photo", authMiddleware, removePhoto);
 
 
 // Edit logged-in user's profile
@@ -54,6 +55,14 @@ router.get("/categories", getCategories);
 // Bookmark routes
 router.post("/bookmarks", authMiddleware, toggleBookmark);
 router.get("/bookmarks", authMiddleware, getBookmarkedNews);
+
+const voteController = require('../controllers/voteController');
+
+// ... existing routes ...
+
+// Vote routes
+router.post('/comments/vote', authMiddleware, voteController.voteComment);
+router.post('/replies/vote', authMiddleware, voteController.voteReply);
 
 module.exports = router;
 

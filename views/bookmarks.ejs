@@ -1,0 +1,53 @@
+<%- include('partials/header') %> <%- include('partials/navbar') %>
+
+<div class="container">
+  <header class="feed-header">
+    <h1 class="feed-title">My Saved News</h1>
+  </header>
+
+  <div class="news-grid">
+    <% if (bookmarks && bookmarks.length > 0) { %> <% bookmarks.forEach(item =>
+    { %>
+    <article class="news-card">
+      <div class="news-content">
+        <div class="news-source">
+          <%= item.source ? item.source.name : 'Unknown Source' %>
+        </div>
+        <h2 class="news-title">
+          <a href="<%= item.url %>" target="_blank"><%= item.title %></a>
+        </h2>
+        <p class="news-desc">
+          <%= item.description || item.content || 'No description available.' %>
+        </p>
+
+        <div class="news-footer">
+          <div class="news-stats">
+            <span><%= new Date(item.publishedAt).toLocaleDateString() %></span>
+          </div>
+          <div class="news-actions">
+            <a href="<%= item.url %>" target="_blank" class="action-btn">
+              <span>↗ Read More</span>
+            </a>
+            <!-- Could add remove bookmark button here -->
+          </div>
+        </div>
+      </div>
+    </article>
+    <% }); %> <% } else { %>
+    <div
+      style="
+        grid-column: 1/-1;
+        text-align: center;
+        padding: 4rem;
+        background: var(--glass-bg);
+        border-radius: var(--radius);
+      "
+    >
+      <h3>No bookmarks yet</h3>
+      <p style="color: var(--text-muted)">Save articles to read them later.</p>
+    </div>
+    <% } %>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

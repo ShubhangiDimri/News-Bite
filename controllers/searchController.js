@@ -4,13 +4,14 @@ const News = require('../models/News');
 // Search and filter news
 exports.searchNews = async (req, res) => {
   const startTime = Date.now();
-  const { query, category, startDate, endDate, page = 1, limit = 9 } = req.query;
+  const { query, category, startDate, endDate, sortBy = 'newest', page = 1, limit = 9 } = req.query;
 
   logger.info('Search request', {
     query,
     category,
     startDate,
     endDate,
+    sortBy,
     page,
     limit
   });
@@ -41,9 +42,13 @@ exports.searchNews = async (req, res) => {
       }
     }
 
+    // Determine sort order
+    const sortOrder = sortBy === 'oldest' ? 1 : -1; // 1 for ascending (oldest), -1 for descending (newest)
+
     // Execute search
     const skip = (page - 1) * limit;
     const results = await News.find(searchCriteria)
+      .sort({ publishedAt: sortOrder })
       .skip(skip)
       .limit(parseInt(limit));
 

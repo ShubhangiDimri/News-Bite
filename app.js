@@ -31,12 +31,26 @@ app.use(cookieParser());
 app.use(requestLogger);
 
 // ✅ Routes
+<<<<<<< HEAD
 app.get("/", (req, res) => {
   res.send("Welcome to the new summarizer api");
 });
 
 app.use('/api/auth', authRoutes);
 app.use('/api/news', newsRoutes);
+=======
+
+
+const viewRoutes = require('./routes/viewRoutes');
+
+app.set('view engine', 'ejs');
+app.set('views', './views');
+app.use(express.static('public'));
+
+app.use('/', viewRoutes);
+app.use('/api/auth',  authRoutes);
+app.use('/api/news',  newsRoutes);
+>>>>>>> frontend_implement
 app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes)
 

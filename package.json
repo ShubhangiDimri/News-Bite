@@ -1,32 +1,37 @@
 {
-  "name": "news-bite",
+  "name": "news-summarizer",
   "version": "1.0.0",
   "description": "",
-  "homepage": "https://github.com/ShubhangiDimri/News-Bite#readme",
-  "bugs": {
-    "url": "https://github.com/ShubhangiDimri/News-Bite/issues"
+  "main": "app.js",
+  "scripts": {
+    "dev": "nodemon app.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ShubhangiDimri/News-Bite.git"
+    "url": "git+https://github.com/Janhvi-S103/News-Summarizer.git"
   },
-  "license": "ISC",
+  "keywords": [],
   "author": "",
-  "type": "commonjs",
-  "main": "app.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Janhvi-S103/News-Summarizer/issues"
   },
+  "homepage": "https://github.com/Janhvi-S103/News-Summarizer#readme",
   "dependencies": {
-    "bcryptjs": "^3.0.3",
+    "axios": "^1.13.2",
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.2",
     "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
     "dotenv": "^17.2.3",
+    "ejs": "^3.1.10",
     "express": "^5.1.0",
+    "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^9.0.0",
+    "mongoose": "^8.19.2",
     "multer": "^2.0.2",
     "NODE": "^0.0.0",
-    "nodemon": "^3.1.11",
+    "node-cron": "^4.2.1",
     "uuid": "^13.0.0",
     "winston": "^3.18.3"
   }
