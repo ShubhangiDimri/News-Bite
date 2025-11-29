@@ -75,6 +75,10 @@ router.get('/profile', authMiddleware, async (req, res) => {
         // Fetch full user details including photo
         const user = await User.findById(req.user.userId).select('username bio_data photo');
 
+        console.log(`[viewProfile] Rendering profile for userId: ${req.user.userId}`);
+        console.log(`[viewProfile] Photo length from DB: ${user?.photo?.length || 0}`);
+        console.log(`[viewProfile] Photo exists? ${!!user?.photo}`);
+
         res.render('profile', {
             title: 'Profile',
             user: {

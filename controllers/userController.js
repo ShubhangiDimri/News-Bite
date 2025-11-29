@@ -65,7 +65,7 @@ exports.activity = async (req, res) => {
 // Update profile photo
 exports.uploadPhoto = async (req, res) => {
   try {
-    const username = req.user.username;  // or however you identify user
+    const userId = req.user.userId;
 
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded" });
@@ -73,11 +73,15 @@ exports.uploadPhoto = async (req, res) => {
     //save image along with data:image/png;base64
     const photoBase64 = "data:image/png;base64," + req.file.buffer.toString("base64");
 
-    const user = await User.findOneAndUpdate(
-      { username },
+    const user = await User.findByIdAndUpdate(
+      userId,
       { photo: photoBase64 },
       { new: true }
     );
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
     res.json({
       message: "Photo updated",
@@ -93,12 +97,27 @@ exports.uploadPhoto = async (req, res) => {
 // Remove profile photo
 exports.removePhoto = async (req, res) => {
   try {
-    const username = req.user.username;
+    const userId = req.user.userId;
 
-    await User.findOneAndUpdate(
-      { username },
-      { photo: "" }
+    console.log(`[removePhoto] Attempting to remove photo for userId: ${userId}`);
+
+    // Explicitly set to null using updateOne which can be more reliable than findByIdAndUpdate for some schema configs
+    const result = await User.updateOne(
+      { _id: userId },
+      { $set: { photo: null } }
     );
+
+    console.log(`[removePhoto] Update result:`, result);
+
+    // Verify the update
+    const updatedUser = await User.findById(userId).select('photo');
+    console.log(`[removePhoto] Verification - Photo exists?`, !!updatedUser.photo);
+    console.log(`[removePhoto] Verification - Photo length:`, updatedUser.photo ? updatedUser.photo.length : 0);
+
+    if (result.matchedCount === 0) {
+      console.log(`[removePhoto] User not found`);
+      return res.status(404).json({ message: "User not found" });
+    }
 
     res.json({
       message: "Photo removed",
