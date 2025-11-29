@@ -112,7 +112,7 @@ exports.deleteComment = async (req, res) => {
       targetId: commentId
     });
 
-    comment.remove();
+    newsItem.comments.pull(commentId);
     await newsItem.save();
     logger.info('Comment deleted successfully', {
       commentId,

@@ -8,6 +8,7 @@
         font-size: 3rem;
         background: linear-gradient(to right, #3b82f6, #10b981);
         -webkit-background-clip: text;
+        background-clip: text;
         -webkit-text-fill-color: transparent;
       "
     >
@@ -111,7 +112,7 @@
                     style="display: flex; gap: 0.2rem; align-items: center"
                   >
                     <button
-                      class="vote-btn upvote-btn <%= comment.upvotes && comment.upvotes.includes(user?._id) ? 'active' : '' %>"
+                      class="vote-btn upvote-btn <%= comment.upvotes && comment.upvotes.some(id => user && user.userId && id.toString() === user.userId.toString()) ? 'active' : '' %>"
                       data-news-id="<%= item._id %>"
                       data-comment-id="<%= comment._id %>"
                       data-type="up"
@@ -134,7 +135,7 @@
                     </button>
                     <span class="vote-score"><%= comment.score || 0 %></span>
                     <button
-                      class="vote-btn downvote-btn <%= comment.downvotes && comment.downvotes.includes(user?._id) ? 'active' : '' %>"
+                      class="vote-btn downvote-btn <%= comment.downvotes && comment.downvotes.some(id => user && user.userId && id.toString() === user.userId.toString()) ? 'active' : '' %>"
                       data-news-id="<%= item._id %>"
                       data-comment-id="<%= comment._id %>"
                       data-type="down"
@@ -161,6 +162,40 @@
                     >
                       Reply
                     </button>
+                    <% if (user && user.userId && comment.userId &&
+                    user.userId.toString() === comment.userId.toString()) { %>
+                    <button
+                      class="delete-btn"
+                      data-news-id="<%= item._id %>"
+                      data-comment-id="<%= comment._id %>"
+                      title="Delete comment"
+                      style="
+                        background: none;
+                        border: none;
+                        color: #ef4444;
+                        cursor: pointer;
+                        padding: 0.2rem;
+                        margin-left: 0.2rem;
+                      "
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path
+                          d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                        ></path>
+                      </svg>
+                    </button>
+                    <% } %>
                   </div>
                 </div>
                 <div class="comment-text"><%= comment.comment %></div>
@@ -198,7 +233,7 @@
                         style="display: flex; gap: 0.3rem; align-items: center"
                       >
                         <button
-                          class="vote-btn upvote-btn small <%= reply.upvotes && reply.upvotes.includes(user?._id) ? 'active' : '' %>"
+                          class="vote-btn upvote-btn small <%= reply.upvotes && reply.upvotes.some(id => user && user.userId && id.toString() === user.userId.toString()) ? 'active' : '' %>"
                           data-news-id="<%= item._id %>"
                           data-comment-id="<%= comment._id %>"
                           data-reply-id="<%= reply._id %>"
@@ -224,7 +259,7 @@
                           ><%= reply.score || 0 %></span
                         >
                         <button
-                          class="vote-btn downvote-btn small <%= reply.downvotes && reply.downvotes.includes(user?._id) ? 'active' : '' %>"
+                          class="vote-btn downvote-btn small <%= reply.downvotes && reply.downvotes.some(id => user && user.userId && id.toString() === user.userId.toString()) ? 'active' : '' %>"
                           data-news-id="<%= item._id %>"
                           data-comment-id="<%= comment._id %>"
                           data-reply-id="<%= reply._id %>"
@@ -247,6 +282,41 @@
                           </svg>
                         </button>
                       </div>
+                      <% if (user && user.userId && reply.userId &&
+                      user.userId.toString() === reply.userId.toString()) { %>
+                      <button
+                        class="delete-btn"
+                        data-news-id="<%= item._id %>"
+                        data-comment-id="<%= comment._id %>"
+                        data-reply-id="<%= reply._id %>"
+                        title="Delete reply"
+                        style="
+                          background: none;
+                          border: none;
+                          color: #ef4444;
+                          cursor: pointer;
+                          padding: 0.2rem;
+                          margin-left: 0.5rem;
+                        "
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        >
+                          <polyline points="3 6 5 6 21 6"></polyline>
+                          <path
+                            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                          ></path>
+                        </svg>
+                      </button>
+                      <% } %>
                     </div>
                     <div style="font-size: 0.9rem; color: var(--text-muted)">
                       <%= reply.comment %>
@@ -351,7 +421,7 @@
 
 <script>
   // Expose current user ID for like/vote functionality
-  window.currentUserId = '<%= user?._id || "" %>';
+  window.currentUserId = '<%= user?.userId || "" %>';
   window.currentUsername = '<%= user?.username || "" %>';
 </script>
 

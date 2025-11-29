@@ -112,7 +112,7 @@ exports.deleteReply = async (req, res) => {
       meta: { parentId: commentId }
     });
 
-    reply.remove();
+    parentComment.replies.pull(replyId);
     await newsItem.save();
     logger.info('Reply deleted successfully', {
       commentId,

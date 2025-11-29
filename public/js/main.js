@@ -135,6 +135,15 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"></path></svg>
                                 </button>
                                 <button class="reply-toggle-btn" data-id="${data.comment._id}">Reply</button>
+                                <button
+                                    class="delete-btn"
+                                    data-news-id="${newsId}"
+                                    data-comment-id="${data.comment._id}"
+                                    title="Delete comment"
+                                    style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 0.2rem; margin-left: 0.2rem;"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                </button>
                             </div>
                         </div>
                         <div class="comment-text">${comment}</div>
@@ -225,16 +234,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (allRes.ok) {
                     const commentsList = document.getElementById(`comments-${newsId}`);
                     const remaining = allData.comments.slice(offset);
-                    
+
                     remaining.forEach(comment => {
                         const div = document.createElement('div');
                         div.className = 'comment-item';
                         div.id = `comment-${comment._id}`;
-                        
+
                         // Build upvotes and downvotes check
                         const isUpvoted = comment.upvotes && comment.upvotes.includes(window.currentUserId) ? 'active' : '';
                         const isDownvoted = comment.downvotes && comment.downvotes.includes(window.currentUserId) ? 'active' : '';
-                        
+
                         // Build replies HTML
                         let repliesHTML = '';
                         if (comment.replies && comment.replies.length > 0) {
@@ -242,7 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             comment.replies.forEach(reply => {
                                 const isReplyUpvoted = reply.upvotes && reply.upvotes.includes(window.currentUserId) ? 'active' : '';
                                 const isReplyDownvoted = reply.downvotes && reply.downvotes.includes(window.currentUserId) ? 'active' : '';
-                                
+
                                 repliesHTML += `
                                     <div class="reply-item" id="reply-${reply._id}" style="margin-bottom: 0.5rem;">
                                         <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -262,12 +271,24 @@ document.addEventListener('DOMContentLoaded', () => {
                                             </div>
                                         </div>
                                         <div style="font-size: 0.9rem; color: var(--text-muted);">${reply.comment}</div>
+                                        ${reply.userId === window.currentUserId ? `
+                                        <button
+                                            class="delete-btn"
+                                            data-news-id="${newsId}"
+                                            data-comment-id="${comment._id}"
+                                            data-reply-id="${reply._id}"
+                                            title="Delete reply"
+                                            style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 0.2rem; margin-left: 0.5rem; position: absolute; top: 0; right: 0;"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                        </button>
+                                        ` : ''}
                                     </div>
                                 `;
                             });
                             repliesHTML += '</div>';
                         }
-                        
+
                         div.innerHTML = `
                             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                                 <span class="comment-user">${comment.username}</span>
@@ -284,6 +305,17 @@ document.addEventListener('DOMContentLoaded', () => {
                                         </svg>
                                     </button>
                                     <button class="reply-toggle-btn" data-id="${comment._id}">Reply</button>
+                                    ${comment.userId === window.currentUserId ? `
+                                    <button
+                                        class="delete-btn"
+                                        data-news-id="${newsId}"
+                                        data-comment-id="${comment._id}"
+                                        title="Delete comment"
+                                        style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 0.2rem; margin-left: 0.2rem;"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                    </button>
+                                    ` : ''}
                                 </div>
                             </div>
                             <div class="comment-text">${comment.comment}</div>
@@ -320,6 +352,47 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (form) {
                 form.style.display = form.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+    });
+
+    // Delete functionality (Delegated)
+    document.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.delete-btn');
+        if (btn) {
+            e.preventDefault();
+            if (!confirm('Are you sure you want to delete this?')) return;
+
+            const newsId = btn.dataset.newsId;
+            const commentId = btn.dataset.commentId;
+            const replyId = btn.dataset.replyId;
+            const isReply = !!replyId;
+
+            const endpoint = isReply
+                ? `/api/user/comments/${commentId}/replies/${replyId}`
+                : `/api/user/comments/${commentId}`;
+
+            try {
+                const res = await fetch(endpoint, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ news_id: newsId })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    const item = isReply ? document.getElementById(`reply-${replyId}`) : document.getElementById(`comment-${commentId}`);
+                    if (item) item.remove();
+                    showToast(data.message || 'Deleted successfully');
+                } else {
+                    showToast(data.message || 'Error deleting');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Something went wrong');
             }
         }
     });
@@ -362,6 +435,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     const replyDiv = document.createElement('div');
                     replyDiv.className = 'reply-item';
+                    replyDiv.id = `reply-${data.reply._id}`;
                     replyDiv.style.cssText = "margin-bottom: 0.5rem;";
                     replyDiv.innerHTML = `
                         <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -381,6 +455,16 @@ document.addEventListener('DOMContentLoaded', () => {
                                     data-reply-id="${data.reply._id}" 
                                     data-type="down">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"></path></svg>
+                                </button>
+                                <button
+                                    class="delete-btn"
+                                    data-news-id="${newsId}"
+                                    data-comment-id="${commentId}"
+                                    data-reply-id="${data.reply._id}"
+                                    title="Delete reply"
+                                    style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 0.2rem; margin-left: 0.5rem;"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                                 </button>
                             </div>
                         </div>
