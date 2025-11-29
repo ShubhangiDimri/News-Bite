@@ -196,6 +196,32 @@ router.get('/admin', authMiddleware, async (req, res) => {
         const suspendedUsers = await User.countDocuments({ status: 'suspended' });
         const adminUsers = await User.countDocuments({ role: 'admin' });
 
+        // Get registration statistics (last 30 days)
+        const registrationStats = [];
+        const today = new Date();
+        
+        for (let i = 29; i >= 0; i--) {
+            const date = new Date(today);
+            date.setDate(date.getDate() - i);
+            
+            const startOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0);
+            const endOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59);
+            
+            const count = await User.countDocuments({
+                createdAt: { $gte: startOfDay, $lte: endOfDay }
+            });
+            
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const dateStr = `${year}-${month}-${day}`;
+            
+            registrationStats.push({
+                date: dateStr,
+                count: count
+            });
+        }
+
         res.render('admin', {
             title: 'Admin Panel',
             user: req.user,
@@ -205,7 +231,8 @@ router.get('/admin', authMiddleware, async (req, res) => {
                 active: activeUsers,
                 suspended: suspendedUsers,
                 admins: adminUsers
-            }
+            },
+            registrationStats: registrationStats
         });
     } catch (err) {
         console.error(err);
