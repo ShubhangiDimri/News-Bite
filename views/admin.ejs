@@ -34,12 +34,19 @@
       >Admin</span
     >
   </div>
-  <a
-    href="/auth/logout"
+  <button
+    onclick="logout()"
     class="btn-primary"
-    style="text-decoration: none; padding: 0.5rem 1rem; font-size: 0.9rem"
-    >Logout</a
+    style="
+      border: none;
+      cursor: pointer;
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+      border-radius: 1rem;
+    "
   >
+    Logout
+  </button>
 </nav>
 
 <div class="container" style="margin-top: 3rem">
@@ -704,6 +711,21 @@
       closeModal();
     }
   });
+
+  async function logout() {
+    try {
+      const res = await fetch('/api/auth/logout', { method: 'POST' });
+      if (res.ok) {
+        window.location.href = '/';
+      } else {
+        console.error('Logout failed');
+        alert('Logout failed');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('An error occurred during logout');
+    }
+  }
 </script>
 
 <%- include('partials/footer') %>
