@@ -99,6 +99,13 @@
   box-shadow: 0 4px 20px rgba(16, 185, 129, 0.1);
 }
 
+[data-theme="light"] .glass-panel {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  backdrop-filter: blur(15px);
+  box-shadow: 0 8px 32px rgba(16, 185, 129, 0.15);
+}
+
 [data-theme="light"] .like-btn {
   color: #6b7280;
   transition: all 0.2s ease;
