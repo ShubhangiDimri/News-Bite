@@ -99,6 +99,12 @@ exports.login = async (req, res) => {
             return res.status(401).json({ message: "Invalid credentials" });
         }
 
+        // Check if user is suspended
+        if (user.status === 'suspended') {
+            logger.warn(`Login failed - User suspended`, { username });
+            return res.status(403).json({ message: "You are suspended. Please wait for the admin to unsuspend your account." });
+        }
+
         const isValidPassword = await comparePassword(password, user.password);
         if (!isValidPassword) {
             logger.warn(`Login failed - Invalid password`, { username });
