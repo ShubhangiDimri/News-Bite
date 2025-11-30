@@ -15,15 +15,9 @@ const userSchema = new mongoose.Schema({
     default: "",
   },
   photo: {
-<<<<<<< HEAD
     data: Buffer,
     contentType: String
-  }
-=======
-    type: String,
-    default: ""
   },
->>>>>>> frontend_implement
   role: {
     type: String,
     enum: ['user', 'admin'],
