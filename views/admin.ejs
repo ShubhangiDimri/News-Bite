@@ -424,6 +424,68 @@
         &times;
       </button>
     </div>
+    
+    <!-- Activity Filters -->
+    <div style="margin-bottom: 1.5rem; display: flex; flex-wrap: gap: 0.5rem; align-items: center; position: relative; z-index: 100;">
+      <label style="font-size: 0.875rem; color: var(--text-muted); margin-right: 0.5rem;">Filter by:</label>
+      <select id="categoryFilter" onchange="applyActivityFilter()" style="
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 0.5rem;
+        padding: 0.25rem 0.75rem;
+        color: #1f2937;
+        font-size: 0.875rem;
+        cursor: pointer;
+        position: relative;
+        z-index: 1000;
+      ">
+        <option value="" style="background: white; color: #1f2937;">All Categories</option>
+        <option value="auth" style="background: white; color: #1f2937;">Authentication</option>
+        <option value="news" style="background: white; color: #1f2937;">News Interactions</option>
+        <option value="comments" style="background: white; color: #1f2937;">Comments</option>
+        <option value="replies" style="background: white; color: #1f2937;">Replies</option>
+        <option value="admin" style="background: white; color: #1f2937;">Admin Actions</option>
+      </select>
+      
+      <select id="actionFilter" onchange="applyActivityFilter()" style="
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 0.5rem;
+        padding: 0.25rem 0.75rem;
+        color: #1f2937;
+        font-size: 0.875rem;
+        cursor: pointer;
+        display: none;
+        position: relative;
+        z-index: 1000;
+      ">
+        <option value="">All Actions</option>
+      </select>
+      
+      <button onclick="clearActivityFilters()" style="
+        background: rgba(156, 163, 175, 0.1);
+        border: 1px solid rgba(156, 163, 175, 0.2);
+        border-radius: 0.5rem;
+        padding: 0.25rem 0.75rem;
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        cursor: pointer;
+        display: none;
+      " id="clearActivityFilter">Clear</button>
+      
+      <div id="activityStats" style="
+        margin-left: auto; 
+        font-size: 0.8rem; 
+        color: var(--text-muted); 
+        background: rgba(255, 255, 255, 0.05);
+        padding: 0.4rem 0.8rem;
+        border-radius: 0.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        font-family: monospace;
+        letter-spacing: 0.5px;
+      "></div>
+    </div>
+    
     <div id="activityContent" style="overflow-y: auto; flex: 1">Loading...</div>
   </div>
 </div>
@@ -685,22 +747,49 @@
     return html;
   }
 
+  let currentUsername = '';
+  let allActivities = [];
+  let actionSummary = [];
+  let categorySummary = [];
+
   async function viewActivity(username) {
     const modal = document.getElementById('activityModal');
-    const content = document.getElementById('activityContent');
     const title = document.getElementById('modalTitle');
 
+    currentUsername = username;
     title.textContent = `Activity: ${username}`;
-    content.innerHTML = '<div style="display: flex; justify-content: center; padding: 2rem;"><div class="spinner"></div></div>';
+    clearActivityFilters();
     modal.style.display = 'flex';
+    
+    await loadActivity();
+  }
+
+  async function loadActivity(category = '', action = '') {
+    const content = document.getElementById('activityContent');
+    const stats = document.getElementById('activityStats');
+    
+    content.innerHTML = '<div style="display: flex; justify-content: center; padding: 2rem;"><div class="spinner"></div></div>';
 
     try {
-      const res = await fetch(`/api/admin/users/${username}/activity`);
+      let url = `/api/admin/users/${currentUsername}/activity`;
+      const params = new URLSearchParams();
+      if (category) params.append('category', category);
+      if (action) params.append('action', action);
+      if (params.toString()) url += '?' + params.toString();
+
+      const res = await fetch(url);
       const data = await res.json();
 
       if (res.ok) {
+        allActivities = data.activities;
+        actionSummary = data.actionSummary;
+        categorySummary = data.categorySummary;
+        
+        updateActionFilter(category);
+        updateStats(data.total, category || action);
+        
         if (data.activities.length === 0) {
-          content.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 2rem;">No activity recorded.</p>';
+          content.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 2rem;">No activity found for the selected filter.</p>';
           return;
         }
 
@@ -719,6 +808,72 @@
     } catch (err) {
       console.error(err);
       content.innerHTML = '<p style="color: #ef4444; text-align: center;">Failed to load activity.</p>';
+    }
+  }
+
+  function updateActionFilter(selectedCategory) {
+    const actionFilter = document.getElementById('actionFilter');
+    const categoryActions = {
+      'auth': ['auth.register', 'auth.login', 'auth.logout'],
+      'news': ['news.like', 'news.bookmark'],
+      'comments': ['comment.create', 'comment.delete', 'comment.vote'],
+      'replies': ['reply.create', 'reply.delete', 'reply.vote'],
+      'admin': ['admin.suspend', 'admin.unsuspend', 'admin.softDelete', 'admin.permanentDelete']
+    };
+
+    if (selectedCategory && categoryActions[selectedCategory]) {
+      actionFilter.style.display = 'inline-block';
+      actionFilter.innerHTML = '<option value="" style="background: white; color: #1f2937;">All Actions</option>' + 
+        categoryActions[selectedCategory].map(action => 
+          `<option value="${action}" style="background: white; color: #1f2937;">${action}</option>`
+        ).join('');
+    } else {
+      actionFilter.style.display = 'none';
+      actionFilter.value = '';
+    }
+  }
+
+  function updateStats(total, filterType) {
+    const stats = document.getElementById('activityStats');
+    if (filterType) {
+      stats.innerHTML = `<span style="color: #3b82f6; font-weight: 600;">${total}</span> activities found`;
+    } else {
+      const categoryText = categorySummary.map(cat => 
+        `<span style="color: #10b981;">${cat._id}</span>: <span style="color: #f59e0b; font-weight: 600;">${cat.count}</span>`
+      ).join(' <span style="color: var(--text-muted);">•</span> ');
+      stats.innerHTML = `<span style="color: #3b82f6; font-weight: 600;">Total: ${total}</span> <span style="color: var(--text-muted);">•</span> ${categoryText}`;
+    }
+  }
+
+  async function applyActivityFilter() {
+    const categoryFilter = document.getElementById('categoryFilter');
+    const actionFilter = document.getElementById('actionFilter');
+    const clearBtn = document.getElementById('clearActivityFilter');
+    
+    const category = categoryFilter.value;
+    const action = actionFilter.value;
+    
+    if (category || action) {
+      clearBtn.style.display = 'inline-block';
+    } else {
+      clearBtn.style.display = 'none';
+    }
+    
+    await loadActivity(category, action);
+  }
+
+  function clearActivityFilters() {
+    const categoryFilter = document.getElementById('categoryFilter');
+    const actionFilter = document.getElementById('actionFilter');
+    const clearBtn = document.getElementById('clearActivityFilter');
+    
+    categoryFilter.value = '';
+    actionFilter.value = '';
+    actionFilter.style.display = 'none';
+    clearBtn.style.display = 'none';
+    
+    if (currentUsername) {
+      loadActivity();
     }
   }
 

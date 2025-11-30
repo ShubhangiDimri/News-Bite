@@ -52,11 +52,11 @@ exports.getAllUsers = async (req, res) => {
 // Get user activity history with summary
 exports.getUserActivity = async (req, res) => {
   const { username } = req.params;
-  const { page = 1, limit = 20 } = req.query;
+  const { page = 1, limit = 20, action, category } = req.query;
   const pageNum = parseInt(page);
   const limitNum = parseInt(limit);
 
-  logger.info('getUserActivity attempt', { adminId: req.user.userId, targetUsername: username, page: pageNum });
+  logger.info('getUserActivity attempt', { adminId: req.user.userId, targetUsername: username, page: pageNum, action, category });
 
   try {
     // Check if user exists
@@ -66,22 +66,70 @@ exports.getUserActivity = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const total = await Activity.countDocuments({ username });
+    // Build filter query
+    const filter = { username };
     
-    const activities = await Activity.find({ username })
+    if (action) {
+      filter.action = action;
+    } else if (category) {
+      // Filter by category
+      switch (category) {
+        case 'auth':
+          filter.action = { $regex: '^auth\.' };
+          break;
+        case 'news':
+          filter.action = { $regex: '^news\.' };
+          break;
+        case 'comments':
+          filter.action = { $regex: '^comment\.' };
+          break;
+        case 'replies':
+          filter.action = { $regex: '^reply\.' };
+          break;
+        case 'admin':
+          filter.action = { $regex: '^admin\.' };
+          break;
+      }
+    }
+
+    const total = await Activity.countDocuments(filter);
+    
+    const activities = await Activity.find(filter)
       .sort({ createdAt: -1 })
       .skip((pageNum - 1) * limitNum)
       .limit(limitNum);
 
-    // Get action summary (top 5 actions)
+    // Get action summary (all actions for this user)
     const actionSummary = await Activity.aggregate([
       { $match: { username } },
       { $group: { _id: '$action', count: { $sum: 1 } } },
-      { $sort: { count: -1 } },
-      { $limit: 5 }
+      { $sort: { count: -1 } }
     ]);
 
-    logger.info('getUserActivity success', { adminId: req.user.userId, targetUsername: username, returned: activities.length });
+    // Get category summary
+    const categorySummary = await Activity.aggregate([
+      { $match: { username } },
+      {
+        $addFields: {
+          category: {
+            $switch: {
+              branches: [
+                { case: { $regexMatch: { input: '$action', regex: '^auth\\.' } }, then: 'auth' },
+                { case: { $regexMatch: { input: '$action', regex: '^news\\.' } }, then: 'news' },
+                { case: { $regexMatch: { input: '$action', regex: '^comment\\.' } }, then: 'comments' },
+                { case: { $regexMatch: { input: '$action', regex: '^reply\\.' } }, then: 'replies' },
+                { case: { $regexMatch: { input: '$action', regex: '^admin\\.' } }, then: 'admin' }
+              ],
+              default: 'other'
+            }
+          }
+        }
+      },
+      { $group: { _id: '$category', count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
+    ]);
+
+    logger.info('getUserActivity success', { adminId: req.user.userId, targetUsername: username, returned: activities.length, filter });
 
     res.status(200).json({
       username,
@@ -89,7 +137,9 @@ exports.getUserActivity = async (req, res) => {
       page: pageNum,
       totalPages: Math.ceil(total / limitNum),
       activities,
-      actionSummary
+      actionSummary,
+      categorySummary,
+      currentFilter: { action, category }
     });
   } catch (error) {
     logger.error('getUserActivity error', {
