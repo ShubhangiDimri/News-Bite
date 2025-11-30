@@ -1,5 +1,5 @@
 {
-  "name": "news-summarizer",
+  "name": "news-Bite",
   "version": "1.0.0",
   "description": "",
   "main": "app.js",
@@ -8,15 +8,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Janhvi-S103/News-Summarizer.git"
+    "url": "git+https://github.com/ShubhangiDimri/News-Bite.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Janhvi-S103/News-Summarizer/issues"
+    "url": "https://github.com/ShubhangiDimri/News-Bite/issues"
   },
-  "homepage": "https://github.com/Janhvi-S103/News-Summarizer#readme",
+  "homepage": "https://github.com/ShubhangiDimri/News-Bite#readme",
   "dependencies": {
     "axios": "^1.13.2",
     "bcrypt": "^6.0.0",
