@@ -14,7 +14,8 @@
         height: auto;
       "
     >
-      <% if (user.profileImage && user.profileImage.trim() !== '') { %>
+      <% if (user.profileImage && typeof user.profileImage === 'string' &&
+      user.profileImage.length > 0) { %>
       <img
         id="avatarImage"
         src="<%= user.profileImage %>"

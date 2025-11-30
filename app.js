@@ -8,6 +8,7 @@ const newsRoutes = require("./routes/newsRoutes");
 const userRoutes = require("./routes/userRoutes");
 const adminRoutes = require('./routes/adminRoutes')
 const requestLogger = require("./middlewares/requestLogger");
+const cspMiddleware = require("./middlewares/cspMiddleware");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -28,13 +29,10 @@ app.use(express.json());
 app.use(cookieParser());
 
 // ✅ Middleware
+app.use(cspMiddleware);
 app.use(requestLogger);
 
-// ✅ Routes
-app.get("/", (req, res) => {
-  res.send("Welcome to the new summarizer api");
-});
-
+// ✅ API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/news', newsRoutes);
 
@@ -46,8 +44,8 @@ app.set('views', './views');
 app.use(express.static('public'));
 
 app.use('/', viewRoutes);
-app.use('/api/auth',  authRoutes);
-app.use('/api/news',  newsRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/news', newsRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes)
 

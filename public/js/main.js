@@ -32,6 +32,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Logout functionality
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+
+            // Show custom confirmation dialog
+            const confirmed = confirm('Are you sure you want to logout from this account?');
+
+            if (confirmed) {
+                // Redirect to logout
+                window.location.href = '/logout';
+            }
+        });
+    }
+
     // Toast notification system
     const showToast = (message, duration = 3000) => {
         const toast = document.createElement('div');
