@@ -11,17 +11,25 @@
     border-bottom: 1px solid var(--glass-border);
   "
 >
-  <div
-    style="
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--text-main);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    "
-  >
-    <span>⚡</span> NewsBite
+  <div class="logo">
+    <svg
+      width="28"
+      height="28"
+      viewBox="0 0 24 24"
+      fill="#3b82f6"
+      style="flex-shrink: 0"
+    >
+      <path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z" />
+    </svg>
+    <span
+      style="
+        background: linear-gradient(to right, #3b82f6, #10b981);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+      "
+      >NewsBite</span
+    >
     <span
       style="
         font-size: 0.75rem;
@@ -76,7 +84,20 @@
       margin-bottom: 3rem;
     "
   >
-    <div class="glass-panel" data-filter-type="all" style="padding: 1.5rem; border-radius: 1rem; cursor: pointer; transition: all 0.3s ease; border: 1px solid rgba(255,255,255,0.1);" onclick="filterUsers('all')" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+    <div
+      class="glass-panel"
+      data-filter-type="all"
+      style="
+        padding: 1.5rem;
+        border-radius: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      "
+      onclick="filterUsers('all')"
+      onmouseover="this.style.background='rgba(255,255,255,0.08)'"
+      onmouseout="this.style.background='rgba(255,255,255,0.05)'"
+    >
       <h3
         style="
           color: var(--text-muted);
@@ -90,7 +111,20 @@
         <%= stats.total %>
       </p>
     </div>
-    <div class="glass-panel" data-filter-type="active" style="padding: 1.5rem; border-radius: 1rem; cursor: pointer; transition: all 0.3s ease; border: 1px solid rgba(255,255,255,0.1);" onclick="filterUsers('active')" onmouseover="this.style.background='rgba(16,185,129,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+    <div
+      class="glass-panel"
+      data-filter-type="active"
+      style="
+        padding: 1.5rem;
+        border-radius: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      "
+      onclick="filterUsers('active')"
+      onmouseover="this.style.background='rgba(16,185,129,0.1)'"
+      onmouseout="this.style.background='rgba(255,255,255,0.05)'"
+    >
       <h3
         style="
           color: var(--text-muted);
@@ -106,7 +140,20 @@
         <%= stats.active %>
       </p>
     </div>
-    <div class="glass-panel" data-filter-type="suspended" style="padding: 1.5rem; border-radius: 1rem; cursor: pointer; transition: all 0.3s ease; border: 1px solid rgba(255,255,255,0.1);" onclick="filterUsers('suspended')" onmouseover="this.style.background='rgba(239,68,68,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+    <div
+      class="glass-panel"
+      data-filter-type="suspended"
+      style="
+        padding: 1.5rem;
+        border-radius: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      "
+      onclick="filterUsers('suspended')"
+      onmouseover="this.style.background='rgba(239,68,68,0.1)'"
+      onmouseout="this.style.background='rgba(255,255,255,0.05)'"
+    >
       <h3
         style="
           color: var(--text-muted);
@@ -120,7 +167,20 @@
         <%= stats.suspended %>
       </p>
     </div>
-    <div class="glass-panel" data-filter-type="admin" style="padding: 1.5rem; border-radius: 1rem; cursor: pointer; transition: all 0.3s ease; border: 1px solid rgba(255,255,255,0.1);" onclick="filterUsers('admin')" onmouseover="this.style.background='rgba(59,130,246,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+    <div
+      class="glass-panel"
+      data-filter-type="admin"
+      style="
+        padding: 1.5rem;
+        border-radius: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      "
+      onclick="filterUsers('admin')"
+      onmouseover="this.style.background='rgba(59,130,246,0.1)'"
+      onmouseout="this.style.background='rgba(255,255,255,0.05)'"
+    >
       <h3
         style="
           color: var(--text-muted);
@@ -141,30 +201,44 @@
     class="glass-panel"
     style="padding: 2rem; border-radius: 1rem; margin-bottom: 4rem"
   >
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-      <h2 style="font-size: 1.5rem; font-weight: 700;">
+    <div
+      style="
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+      "
+    >
+      <h2 style="font-size: 1.5rem; font-weight: 700">
         User Management
-        <span id="filterBadge" style="
-          display: none;
-          margin-left: 1rem;
-          font-size: 0.9rem;
-          background: rgba(59, 130, 246, 0.2);
-          color: #3b82f6;
-          padding: 0.3rem 0.8rem;
-          border-radius: 1rem;
-          border: 1px solid rgba(59, 130, 246, 0.3);
-        "></span>
+        <span
+          id="filterBadge"
+          style="
+            display: none;
+            margin-left: 1rem;
+            font-size: 0.9rem;
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+            padding: 0.3rem 0.8rem;
+            border-radius: 1rem;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+          "
+        ></span>
       </h2>
-      <button id="clearFilter" style="
-        display: none;
-        padding: 0.5rem 1rem;
-        background: rgba(239, 68, 68, 0.2);
-        color: #ef4444;
-        border: 1px solid rgba(239, 68, 68, 0.3);
-        border-radius: 0.5rem;
-        cursor: pointer;
-        font-size: 0.9rem;
-      " onclick="clearFilter()">
+      <button
+        id="clearFilter"
+        style="
+          display: none;
+          padding: 0.5rem 1rem;
+          background: rgba(239, 68, 68, 0.2);
+          color: #ef4444;
+          border: 1px solid rgba(239, 68, 68, 0.3);
+          border-radius: 0.5rem;
+          cursor: pointer;
+          font-size: 0.9rem;
+        "
+        onclick="clearFilter()"
+      >
         Clear Filter
       </button>
     </div>
@@ -439,7 +513,7 @@
       const roleCell = row.cells[1]; // Role column
       const status = statusCell.textContent.trim();
       const role = roleCell.textContent.trim();
-      
+
       let shouldShow = false;
       let filterLabel = '';
 
@@ -485,7 +559,7 @@
   function clearFilter() {
     const tableBody = document.querySelector('table tbody');
     const rows = tableBody.querySelectorAll('tr');
-    
+
     rows.forEach(row => {
       row.style.display = '';
     });
@@ -624,6 +698,7 @@
       const res = await fetch(`/api/admin/users/${userId}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirm: true })
       });
 
       if (res.ok) {
