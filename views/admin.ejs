@@ -490,6 +490,140 @@
   </div>
 </div>
 
+<!-- Suspend User Modal -->
+<div
+  id="suspendModal"
+  style="
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  "
+>
+  <div
+    class="glass-panel"
+    style="
+      width: 90%;
+      max-width: 500px;
+      display: flex;
+      flex-direction: column;
+      padding: 2rem;
+      border-radius: 1.5rem;
+    "
+  >
+    <div
+      style="
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+      "
+    >
+      <h3 style="font-size: 1.5rem; font-weight: 700; color: #ef4444;">
+        Suspend User
+      </h3>
+      <button
+        onclick="closeSuspendModal()"
+        style="
+          background: none;
+          border: none;
+          color: var(--text-muted);
+          font-size: 1.5rem;
+          cursor: pointer;
+        "
+      >
+        &times;
+      </button>
+    </div>
+    
+    <div style="margin-bottom: 1.5rem;">
+      <p style="color: var(--text-muted); margin-bottom: 1rem;">
+        You are about to suspend user: <strong id="suspendUsername" style="color: var(--text-main);"></strong>
+      </p>
+      
+      <div style="margin-bottom: 1rem;">
+        <label style="display: block; margin-bottom: 0.5rem; color: var(--text-main); font-weight: 600;">
+          Reason for suspension (optional)
+        </label>
+        <textarea
+          id="suspendReason"
+          placeholder="Enter the reason for suspension (optional)..."
+          style="
+            width: 100%;
+            min-height: 80px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            color: var(--text-main);
+            font-size: 0.875rem;
+            resize: vertical;
+          "
+        ></textarea>
+      </div>
+      
+      <div style="margin-bottom: 1rem;">
+        <label style="display: block; margin-bottom: 0.5rem; color: var(--text-main); font-weight: 600;">
+          Suspend until *
+        </label>
+        <input
+          type="datetime-local"
+          id="suspendUntil"
+          style="
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            color: var(--text-main);
+            font-size: 0.875rem;
+          "
+          required
+        />
+        <small style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.25rem; display: block;">
+          Set the date and time when the suspension should automatically end
+        </small>
+      </div>
+    </div>
+    
+    <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+      <button
+        onclick="closeSuspendModal()"
+        style="
+          background: rgba(156, 163, 175, 0.1);
+          border: 1px solid rgba(156, 163, 175, 0.2);
+          border-radius: 0.5rem;
+          padding: 0.75rem 1.5rem;
+          color: var(--text-muted);
+          cursor: pointer;
+          font-size: 0.875rem;
+        "
+      >
+        Cancel
+      </button>
+      <button
+        onclick="confirmSuspension()"
+        style="
+          background: linear-gradient(45deg, #ef4444, #dc2626);
+          border: none;
+          border-radius: 0.5rem;
+          padding: 0.75rem 1.5rem;
+          color: white;
+          cursor: pointer;
+          font-size: 0.875rem;
+          font-weight: 600;
+        "
+      >
+        Suspend User
+      </button>
+    </div>
+  </div>
+</div>
+
 <script>
   // Filter users by status or role
   function filterUsers(type) {
@@ -652,17 +786,50 @@
     }
   });
 
+  let currentSuspendUserId = null;
+
   async function suspendUser(userId) {
-    if (!confirm("Are you sure you want to suspend this user?")) return;
+    currentSuspendUserId = userId;
+    
+    // Find the user's username from the table
+    const userRow = document.querySelector(`button[onclick="suspendUser('${userId}')"]`).closest('tr');
+    const username = userRow.cells[0].textContent.trim();
+    
+    document.getElementById('suspendUsername').textContent = username;
+    document.getElementById('suspendReason').value = '';
+    document.getElementById('suspendUntil').value = '';
+    document.getElementById('suspendModal').style.display = 'flex';
+  }
+
+  function closeSuspendModal() {
+    document.getElementById('suspendModal').style.display = 'none';
+    currentSuspendUserId = null;
+  }
+
+  async function confirmSuspension() {
+    const reason = document.getElementById('suspendReason').value.trim();
+    const until = document.getElementById('suspendUntil').value;
+    
+    if (!until) {
+      alert('Please select a suspension end date and time');
+      return;
+    }
 
     try {
-      const res = await fetch(`/api/admin/users/${userId}/suspend`, {
+      const requestBody = { until };
+      if (reason) {
+        requestBody.reason = reason;
+      }
+
+      const res = await fetch(`/api/admin/users/${currentSuspendUserId}/suspend`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody)
       });
 
       if (res.ok) {
         alert("User suspended successfully");
+        closeSuspendModal();
         location.reload();
       } else {
         const data = await res.json();
@@ -884,6 +1051,12 @@
   document.getElementById('activityModal').addEventListener('click', (e) => {
     if (e.target === document.getElementById('activityModal')) {
       closeModal();
+    }
+  });
+
+  document.getElementById('suspendModal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('suspendModal')) {
+      closeSuspendModal();
     }
   });
 
