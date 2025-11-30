@@ -49,10 +49,28 @@
         const confirmed = confirm('Are you sure you want to logout from this account?');
         
         if (confirmed) {
-          // Redirect to logout
-          window.location.href = '/logout';
+          // Call logout API
+          logout();
         }
       });
     }
   });
+
+  async function logout() {
+    try {
+      const res = await fetch('/api/auth/logout', { 
+        method: 'POST',
+        credentials: 'include'
+      });
+      if (res.ok) {
+        window.location.href = '/';
+      } else {
+        console.error('Logout failed');
+        alert('Logout failed');
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+      alert('An error occurred during logout');
+    }
+  }
 </script>

@@ -230,6 +230,16 @@
                 font-weight: 600;
               "
             >
+              Last Logout
+            </th>
+            <th
+              style="
+                padding: 1rem;
+                text-align: left;
+                color: var(--text-muted);
+                font-weight: 600;
+              "
+            >
               Actions
             </th>
           </tr>
@@ -273,6 +283,16 @@
               "
             >
               <%= u.lastLogin ? new Date(u.lastLogin).toLocaleDateString() :
+              'Never' %>
+            </td>
+            <td
+              style="
+                padding: 1rem;
+                color: var(--text-muted);
+                font-size: 0.875rem;
+              "
+            >
+              <%= u.lastLogout ? new Date(u.lastLogout).toLocaleDateString() :
               'Never' %>
             </td>
             <td style="padding: 1rem">
@@ -721,7 +741,10 @@
 
   async function logout() {
     try {
-      const res = await fetch('/api/auth/logout', { method: 'POST' });
+      const res = await fetch('/api/auth/logout', { 
+        method: 'POST',
+        credentials: 'include'
+      });
       if (res.ok) {
         window.location.href = '/';
       } else {
