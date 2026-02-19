@@ -179,20 +179,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await res.json();
 
                 if (res.ok) {
-                    // Update score
-                    const scoreSpan = btn.parentNode.querySelector('.vote-score');
-                    if (scoreSpan) scoreSpan.textContent = data.score;
-
-                    // Update button states
                     const parent = btn.parentNode;
-                    const upBtn = parent.querySelector('.upvote-btn');
+                    const upBtn   = parent.querySelector('.upvote-btn');
                     const downBtn = parent.querySelector('.downvote-btn');
+                    const upCount   = parent.querySelector('.vote-count.up');
+                    const downCount = parent.querySelector('.vote-count.down');
 
-                    if (data.upvoted) upBtn.classList.add('active');
-                    else upBtn.classList.remove('active');
-
+                    if (data.upvoted)   upBtn.classList.add('active');
+                    else                upBtn.classList.remove('active');
                     if (data.downvoted) downBtn.classList.add('active');
-                    else downBtn.classList.remove('active');
+                    else                downBtn.classList.remove('active');
+
+                    if (upCount   && data.upvotes   != null) upCount.textContent   = data.upvotes;
+                    if (downCount && data.downvotes != null) downCount.textContent = data.downvotes;
                 } else {
                     showToast(data.message || 'Error voting');
                 }
@@ -241,16 +240,13 @@ document.addEventListener('DOMContentLoaded', () => {
                                             <span style="color: var(--primary-color); font-size: 0.8rem">${reply.username}:</span>
                                             <div class="reply-actions" style="display: flex; gap: 0.3rem; align-items: center;">
                                                 <button class="vote-btn upvote-btn small ${isReplyUpvoted}" data-news-id="${newsId}" data-comment-id="${comment._id}" data-reply-id="${reply._id}" data-type="up">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                        <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
-                                                    </svg>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
                                                 </button>
-                                                <span class="vote-score small">${reply.score || 0}</span>
+                                                <span class="vote-count up small">${reply.upvotes ? reply.upvotes.length : 0}</span>
                                                 <button class="vote-btn downvote-btn small ${isReplyDownvoted}" data-news-id="${newsId}" data-comment-id="${comment._id}" data-reply-id="${reply._id}" data-type="down">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                        <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"></path>
-                                                    </svg>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"></path></svg>
                                                 </button>
+                                                <span class="vote-count down small">${reply.downvotes ? reply.downvotes.length : 0}</span>
                                             </div>
                                         </div>
                                         <div style="font-size: 0.9rem; color: var(--text-muted);">${reply.comment}</div>
@@ -277,16 +273,13 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <span class="comment-user">${comment.username}</span>
                                 <div class="comment-actions" style="display: flex; gap: 0.2rem; align-items: center;">
                                     <button class="vote-btn upvote-btn ${isUpvoted}" data-news-id="${newsId}" data-comment-id="${comment._id}" data-type="up">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
-                                        </svg>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
                                     </button>
-                                    <span class="vote-score">${comment.score || 0}</span>
+                                    <span class="vote-count up">${comment.upvotes ? comment.upvotes.length : 0}</span>
                                     <button class="vote-btn downvote-btn ${isDownvoted}" data-news-id="${newsId}" data-comment-id="${comment._id}" data-type="down">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"></path>
-                                        </svg>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"></path></svg>
                                     </button>
+                                    <span class="vote-count down">${comment.downvotes ? comment.downvotes.length : 0}</span>
                                     <button class="reply-toggle-btn" data-id="${comment._id}">Reply</button>
                                     ${comment.userId === window.currentUserId ? `
                                     <button

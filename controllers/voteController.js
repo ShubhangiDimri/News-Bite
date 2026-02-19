@@ -140,8 +140,10 @@ exports.voteComment = async (req, res) => {
     res.json({
       message: "Vote recorded",
       score: result.score,
-      upvoted: result.upvotes.includes(userId),
-      downvoted: result.downvotes.includes(userId)
+      upvotes: result.upvotes.length,
+      downvotes: result.downvotes.length,
+      upvoted: result.upvotes.some(id => id.toString() === userId.toString()),
+      downvoted: result.downvotes.some(id => id.toString() === userId.toString())
     });
   } catch (error) {
     logger.error('Vote error', { error: error.message });
@@ -182,8 +184,10 @@ exports.voteReply = async (req, res) => {
     res.json({
       message: "Vote recorded",
       score: result.score,
-      upvoted: result.upvotes.includes(userId),
-      downvoted: result.downvotes.includes(userId)
+      upvotes: result.upvotes.length,
+      downvotes: result.downvotes.length,
+      upvoted: result.upvotes.some(id => id.toString() === userId.toString()),
+      downvoted: result.downvotes.some(id => id.toString() === userId.toString())
     });
   } catch (error) {
     logger.error('Vote error', { error: error.message });

@@ -792,9 +792,40 @@ select.form-input option {
   background: rgba(16, 185, 129, 0.1);
 }
 
+/* Upvote active = green */
+.upvote-btn.active {
+  color: #4ade80;
+  background: rgba(74, 222, 128, 0.12);
+}
+.upvote-btn.active svg {
+  fill: #4ade80;
+  stroke: #4ade80;
+}
+
+/* Downvote active = red */
+.downvote-btn.active {
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.12);
+}
+.downvote-btn.active svg {
+  fill: #f87171;
+  stroke: #f87171;
+}
+
 .vote-btn.active svg {
   fill: currentColor;
 }
+
+/* Per-button vote counts */
+.vote-count {
+  font-size: 0.82rem;
+  font-weight: 600;
+  min-width: 1rem;
+  text-align: center;
+  color: var(--text-muted);
+}
+.vote-count.up   { color: #4ade80; }
+.vote-count.down { color: #f87171; }
 
 .vote-score {
   font-size: 0.9rem;
