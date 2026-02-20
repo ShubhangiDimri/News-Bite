@@ -56,15 +56,8 @@ router.get("/categories", getCategories);
 router.post("/bookmarks", authMiddleware, toggleBookmark);
 router.get("/bookmarks", authMiddleware, getBookmarkedNews);
 
-const voteController = require('../controllers/voteController');
-
-// ... existing routes ...
-
-// Vote routes
-router.post('/comments/vote', authMiddleware, voteController.voteComment);
-router.post('/replies/vote', authMiddleware, voteController.voteReply);
+// Vote routes (used by main.js frontend)
+router.post("/comments/vote", authMiddleware, voteComment);
+router.post("/replies/vote", authMiddleware, voteReply);
 
 module.exports = router;
-
-
-
