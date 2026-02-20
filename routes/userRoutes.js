@@ -56,4 +56,8 @@ router.get("/categories", getCategories);
 router.post("/bookmarks", authMiddleware, toggleBookmark);
 router.get("/bookmarks", authMiddleware, getBookmarkedNews);
 
+// Vote routes (used by main.js frontend)
+router.post("/comments/vote", authMiddleware, voteComment);
+router.post("/replies/vote", authMiddleware, voteReply);
+
 module.exports = router;
