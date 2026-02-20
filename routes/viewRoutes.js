@@ -6,6 +6,8 @@ const { fetchNewsFromAPI } = require('../services/newsFetcher');
 const checkUser = require('../middlewares/checkUser');
 const authMiddleware = require('../middlewares/authMiddleware');
 
+const { logout } = require('../controllers/authController');
+
 const router = express.Router();
 
 // Apply checkUser to all public routes to populate res.locals.user if logged in
@@ -276,9 +278,6 @@ router.get('/admin', authMiddleware, async (req, res) => {
     }
 });
 
-router.get('/logout', (req, res) => {
-    res.clearCookie('authToken');
-    res.redirect('/');
-});
+router.get('/logout', logout);
 
 module.exports = router;

@@ -140,3 +140,48 @@ exports.login = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 }
+
+// logout handling
+exports.logout = async (req, res) => {
+    try {
+        if (!req.user) {
+            res.clearCookie('authToken');
+            return res.redirect('/');
+        }
+
+        const userId = req.user.userId;
+        const username = req.user.username;
+
+        logger.info(`Logout attempt for user: ${username}`);
+
+        // Update lastLogout field
+        await User.findByIdAndUpdate(userId, {
+            lastLogout: new Date()
+        });
+
+        // Log logout activity
+        await Activity.create({
+            userId,
+            username,
+            action: 'auth.logout',
+            meta: { ip: req.ip, userAgent: req.headers['user-agent'] }
+        });
+
+        res.clearCookie('authToken');
+        logger.info(`User logged out successfully`, { userId, username });
+        
+        // Handle both API and View requests
+        if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+            return res.json({ message: "Logout successful" });
+        } else {
+            return res.redirect('/');
+        }
+    } catch (error) {
+        logger.error(`Logout error`, {
+            error: error.message,
+            stack: error.stack
+        });
+        res.clearCookie('authToken');
+        res.redirect('/');
+    }
+}
