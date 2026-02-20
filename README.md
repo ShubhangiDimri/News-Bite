@@ -1,85 +1,106 @@
-# 📰 News Summarizer
+# ⚡ NewsBite
 
-A web app that fetches news articles, displays summaries, and allows users to search, filter, and bookmark stories.
+**NewsBite** is a high-performance news aggregator and summarizer designed for the modern reader. It fetches the latest stories from around the world, delivers them in bite-sized snippets, and provides a premium, interactive experience with community engagement features.
 
-## 🚀 Features
+---
 
-- 👤 User profiles with username, bio, and profile picture
-- 🌓 Toggle light/dark theme for personalized viewing
-- 🧠 News summarization for quick insights
-- 🔍 Search and filter news by category, author, date, title, or source
-- 💾 Bookmark and unbookmark articles for later reading
-- ❤️ Like and comment on news posts to engage with content
-- 🔑 Secure user authentication with JWT
-- 🌐 Responsive frontend built using EJS
-- 🗄️ Backend powered by Express.js and MongoDB
+## ✨ Features
 
-## 📁 Folder Structure
+- **� Smart Summarization**: Get the gist of every story instantly with our optimized summarization engine.
+- **🌓 Premium Dual-Mode UI**: Seamlessly toggle between a sleek dark mode and a "Premium Polish" light mode.
+- **🔍 Advanced Search & Discovery**: Filter news by category, source, date, or keywords with a powerful search interface.
+- **� Community Interaction**: Like, comment, and reply to news posts to engage with other readers.
+- **🔖 Personal Library**: Save and bookmark your favorite articles for later reading.
+- **� Secure Experience**: Full user authentication system powered by JWT and encrypted passwords.
+- **🛠️ Admin Panel**: Comprehensive management suite for monitoring user activity and system stats.
+
+---
+
+## 🏗️ Folder Structure
+
 ```bash
-NEWS-SUMMARIZER/
-│
-├── controllers/
-│   ├── authController.js          # Handles user authentication (register, login, profile)
-│   └── userController.js          # Handles user interactions (like, comment, bookmark)
-│
-├── database/
-│   └── DatabaseConnection.js      # MongoDB connection setup
-│
-├── logs/                          # Log files (if any)
-│
-├── middlewares/
-│   └── authMiddleware.js          # JWT authentication middleware
-│
-├── models/
-│   ├── News.js                    # Schema for news articles
-│   ├── User.js                    # Schema for user accounts
-│   └── UserNews.js                # Schema for user-news interactions (likes, comments, bookmarks)
-│
-├── routes/
-│   ├── authRoutes.js              # Authentication-related API routes
-│   ├── newsRoutes.js              # News fetching and category routes
-│   └── userRoutes.js              # User activity routes (comment, like, bookmark)
-│
-├── services/                      # For future modular services (e.g., external APIs, summarization)
-│
-├── utils/                         # Utility functions (logging, helpers, etc.)
-│
-├── .env                           # Environment variables (DB URI, JWT secret, etc.)
-├── .gitignore                     # Files and folders ignored by Git
-├── app.js                         # Main Express app entry point
-├── package.json                   # Project metadata and dependencies
-├── package-lock.json              # Locked dependency versions
-└── README.md                      # Project documentation
+NEWS-BITE/
+├── controllers/       # Business logic (Auth, User activity, Admin, etc.)
+├── database/          # Database connection & configuration
+├── middlewares/       # Security, Auth, and Loggers
+├── models/            # Mongoose schemas (News, User, UserNews)
+├── public/            # Static assets (Premium CSS, Frontend JS)
+├── routes/            # API & View routing
+├── services/          # Core logic (News Fetcher, Moderation)
+├── utils/             # Helpers (Validation, Sanitization)
+├── views/             # EJS Templates
+├── app.js             # Main entry point
+└── .env               # Environment configuration
 ```
 
+---
 
-## 🧾 API Endpoints
+## 🛠️ Tech Stack
 
-Below is a summary of all API routes categorized by their functionality.
+- **Frontend**: EJS (Embedded JavaScript), Vanilla CSS (Custom Design System)
+- **Backend**: Node.js, Express.js (v5+)
+- **Database**: MongoDB (Mongoose ODM)
+- **Authentication**: JsonWebToken (JWT), BcryptJS
+- **Communication**: Axios, Cookie-Parser
+- **Logging**: Winston
 
-| Method   | Endpoint                        | Description                                                       |
-| -------- | ------------------------------- | ----------------------------------------------------------------- |
-| `POST`   | `/api/auth/register`            | Register a new user                                               |
-| `POST`   | `/api/auth/login`               | Log in and receive a JWT token                                    |
-| `GET`    | `/api/auth/profile`             | Get the logged-in user's profile (protected route)                |
-| `GET`    | `/api/news`                     | Fetch all news articles                                           |
-| `GET`    | `/api/news/:id`                 | Fetch a single news article by its ID                             |
-| `GET`    | `/api/news/search?query=term`   | Search news articles by keyword                                   |
-| `POST`   | `/api/news/subscribe`           | Subscribe to a news source                                        |
-| `GET`    | `/api/news/category/:category`  | Get all news under a specific category                            |
-| `POST`   | `/api/user/comment`             | Add a comment to a news article                                   |
-| `POST`   | `/api/user/like`                | Like or unlike a news article                                     |
-| `POST`   | `/api/user/bookmark`            | Toggle bookmark (save/unsave) for a news article                  |
-| `GET`    | `/api/user/bookmarks/:username` | Get all bookmarked news for a specific user                       |
-| `DELETE` | `/api/user/deleteComment`       | Delete a comment                                                  |
-| `GET`    | `/api/user/search`              | Search for news (same as news search, with user-specific context) |
+---
 
-## 🧠 Tech Stack
+## 🚀 Getting Started
 
-**Frontend:** EJS 
-**Backend:** Node.js, Express.js  
-**Database:** MongoDB, Mongoose  
-**Authentication:** JWT  
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) installed
+- [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) or a local MongoDB instance
+- [NewsAPI Key](https://newsapi.org/) (Free tier available)
+
+### Installation
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/ShubhangiDimri/News-Bite.git
+   cd News-Bite
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+3. **Configure environment variables**:
+   Create a `.env` file in the root directory:
+   ```env
+   PORT=5000
+   MONGO_URI=your_mongodb_uri
+   JWT_SECRET=your_jwt_secret
+   NEWS_API_KEY=your_newsapi_key
+   ```
+
+4. **Run the development server**:
+   ```bash
+   npm run dev
+   ```
+
+---
+
+## 🧾 API Documentation
+
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/auth/register` | Register a new user | ❌ |
+| `POST` | `/api/auth/login` | Log in and receive JWT | ❌ |
+| `GET` | `/api/news` | Fetch recent news articles | ❌ |
+| `GET` | `/api/news/search` | Search & Filter news | ❌ |
+| `POST` | `/api/user/comment` | Add a comment to a story | ✅ |
+| `POST` | `/api/user/like` | Like/Unlike a story | ✅ |
+| `POST` | `/api/user/bookmark` | Save a story to favorites | ✅ |
+| `GET` | `/api/admin/stats` | View system statistics | ✅ (Admin) |
+
+---
+
+## 📜 License
+
+Distributed under the ISC License. See `LICENSE` for more information.
 
 
 
