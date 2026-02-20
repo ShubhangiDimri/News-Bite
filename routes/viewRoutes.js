@@ -17,6 +17,10 @@ router.get('/', async (req, res) => {
     if (!req.user) {
         return res.redirect('/login');
     }
+    // Admins go straight to admin panel — interfaces are fully separated
+    if (req.user.role === 'admin') {
+        return res.redirect('/admin');
+    }
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = 9; // 3x3 grid
@@ -66,6 +70,7 @@ router.get('/', async (req, res) => {
         res.status(500).send('Server Error');
     }
 });
+
 
 router.get('/login', (req, res) => {
     if (req.user) return res.redirect('/');

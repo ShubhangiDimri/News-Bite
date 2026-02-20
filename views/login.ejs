@@ -5,8 +5,214 @@
     overflow: hidden;
     height: 100vh;
   }
+
+  /* ── Admin trigger icon (bottom-right corner) ── */
+  #adminTrigger {
+    position: fixed;
+    bottom: 1.75rem;
+    right: 1.75rem;
+    width: 2.6rem;
+    height: 2.6rem;
+    border-radius: 50%;
+    background: rgba(31, 41, 55, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(156, 163, 175, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(8px);
+    z-index: 200;
+  }
+  #adminTrigger:hover {
+    color: #f59e0b;
+    border-color: rgba(245, 158, 11, 0.4);
+    background: rgba(245, 158, 11, 0.08);
+    box-shadow: 0 0 18px rgba(245, 158, 11, 0.25);
+    transform: scale(1.1);
+  }
+  #adminTrigger svg {
+    width: 1.1rem;
+    height: 1.1rem;
+  }
+
+  /* ── Admin modal overlay ── */
+  #adminModal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 300;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  #adminModal.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  /* ── Admin card ── */
+  .admin-card {
+    background: linear-gradient(145deg, rgba(20, 17, 10, 0.97), rgba(31, 25, 8, 0.97));
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    border-radius: 1.5rem;
+    padding: 2.25rem 2rem;
+    width: 100%;
+    max-width: 400px;
+    box-shadow:
+      0 0 0 1px rgba(245, 158, 11, 0.1),
+      0 24px 60px rgba(0, 0, 0, 0.7),
+      0 0 60px rgba(245, 158, 11, 0.08);
+    transform: translateY(20px) scale(0.97);
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+  }
+  #adminModal.open .admin-card {
+    transform: translateY(0) scale(1);
+  }
+
+  .admin-close-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    color: rgba(156, 163, 175, 0.6);
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s, background 0.2s;
+  }
+  .admin-close-btn:hover {
+    color: #f87171;
+    background: rgba(239, 68, 68, 0.1);
+  }
+
+  .admin-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 1.75rem;
+  }
+
+  .admin-badge {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(251, 191, 36, 0.05));
+    border: 1px solid rgba(245, 158, 11, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.85rem;
+    box-shadow: 0 0 24px rgba(245, 158, 11, 0.2);
+  }
+  .admin-badge svg {
+    width: 1.6rem;
+    height: 1.6rem;
+    color: #f59e0b;
+  }
+
+  .admin-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #f3f4f6;
+    margin-bottom: 0.2rem;
+    letter-spacing: 0.02em;
+  }
+  .admin-subtitle {
+    font-size: 0.8rem;
+    color: rgba(245, 158, 11, 0.7);
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .admin-form .form-label {
+    color: rgba(245, 158, 11, 0.75);
+  }
+
+  .admin-form .form-input {
+    background: rgba(0, 0, 0, 0.35);
+    border-color: rgba(245, 158, 11, 0.2);
+    color: #f3f4f6;
+  }
+  .admin-form .form-input:focus {
+    border-color: rgba(245, 158, 11, 0.6);
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+    background: rgba(0, 0, 0, 0.45);
+  }
+
+  .btn-admin {
+    width: 100%;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #d97706, #f59e0b);
+    color: #0d0d0d;
+    border: none;
+    border-radius: 2rem;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1.25rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 20px rgba(217, 119, 6, 0.4);
+    letter-spacing: 0.03em;
+  }
+  .btn-admin:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 28px rgba(217, 119, 6, 0.55);
+    background: linear-gradient(135deg, #b45309, #d97706);
+  }
+
+  .admin-error {
+    display: none;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    color: #f87171;
+    padding: 0.6rem 0.85rem;
+    border-radius: 0.6rem;
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+  }
+
+  /* Tooltip on hover for trigger */
+  #adminTrigger::before {
+    content: 'Admin Access';
+    position: absolute;
+    bottom: calc(100% + 8px);
+    right: 0;
+    background: rgba(20, 20, 20, 0.9);
+    color: #f59e0b;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.3rem 0.65rem;
+    border-radius: 0.4rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    transition: opacity 0.2s ease;
+  }
+  #adminTrigger:hover::before {
+    opacity: 1;
+  }
 </style>
 
+<!-- ── Main user login ── -->
 <div
   style="
     height: 100vh;
@@ -77,35 +283,16 @@
               align-items: center;
             "
           >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
               <circle cx="12" cy="12" r="3"></circle>
             </svg>
           </button>
         </div>
       </div>
-      <div style="display: flex; gap: 1rem; margin-top: 1rem">
-        <button type="submit" class="btn btn-primary" style="flex: 1">
-          Login
-        </button>
-        <button
-          type="button"
-          id="adminLoginBtn"
-          class="btn btn-outline"
-          style="flex: 1"
-        >
-          Admin Login
-        </button>
-      </div>
+      <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem">
+        Login
+      </button>
     </form>
     <div class="auth-footer" style="margin-top: 1.5rem">
       Don't have an account? <a href="/register">Sign up</a>
@@ -113,15 +300,104 @@
   </div>
 </div>
 
+<!-- ── Admin trigger (shield icon, bottom-right) ── -->
+<button id="adminTrigger" title="Admin Access" aria-label="Admin Login">
+  <!-- Shield icon -->
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+  </svg>
+</button>
+
+<!-- ── Admin Login Modal ── -->
+<div id="adminModal" role="dialog" aria-modal="true" aria-label="Admin Login">
+  <div class="admin-card">
+    <button class="admin-close-btn" id="adminClose" aria-label="Close">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+
+    <div class="admin-header">
+      <div class="admin-badge">
+        <!-- Lock icon -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+      </div>
+      <div class="admin-title">Admin Portal</div>
+      <div class="admin-subtitle">Restricted Access</div>
+    </div>
+
+    <div class="admin-error" id="adminError"></div>
+
+    <form id="adminLoginForm" class="admin-form">
+      <div class="form-group" style="margin-bottom: 1rem">
+        <label for="adminUsername" class="form-label">Username</label>
+        <input
+          type="text"
+          id="adminUsername"
+          name="username"
+          class="form-input"
+          autocomplete="username"
+          required
+        />
+      </div>
+      <div class="form-group" style="margin-bottom: 0.5rem">
+        <label for="adminPassword" class="form-label">Password</label>
+        <div style="position: relative">
+          <input
+            type="password"
+            id="adminPassword"
+            name="password"
+            class="form-input"
+            style="padding-right: 3rem"
+            autocomplete="current-password"
+            required
+          />
+          <button
+            type="button"
+            id="toggleAdminPassword"
+            style="
+              position: absolute;
+              right: 0.75rem;
+              top: 50%;
+              transform: translateY(-50%);
+              background: none;
+              border: none;
+              color: rgba(245, 158, 11, 0.5);
+              cursor: pointer;
+              padding: 0.25rem;
+              display: flex;
+              align-items: center;
+            "
+          >
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-admin" id="adminSubmitBtn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+        Enter Admin Panel
+      </button>
+    </form>
+  </div>
+</div>
 
 <script>
-  const loginForm    = document.getElementById("loginForm");
-  const adminLoginBtn = document.getElementById("adminLoginBtn");
+  /* ── User login ── */
+  const loginForm     = document.getElementById("loginForm");
   const loginErrorDiv = document.getElementById("loginError");
   const successBanner = document.getElementById("successBanner");
-  let isAdminLogin = false;
 
-  // Show success banner if redirected from registration
   if (new URLSearchParams(window.location.search).get("registered") === "1") {
     successBanner.style.display = "block";
   }
@@ -135,62 +411,102 @@
     loginErrorDiv.style.display = "none";
   }
 
-  adminLoginBtn.addEventListener("click", () => {
-    isAdminLogin = true;
-    loginForm.requestSubmit();
-  });
-
-  // Password visibility toggle
+  /* Password visibility toggle (user) */
   const togglePassword = document.getElementById("togglePassword");
-  const passwordInput = document.getElementById("password");
-
+  const passwordInput  = document.getElementById("password");
   togglePassword.addEventListener("click", () => {
-    const type = passwordInput.type === "password" ? "text" : "password";
-    passwordInput.type = type;
-    if (type === "password") {
-      togglePassword.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
-    } else {
-      togglePassword.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 11 8 11 8a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61A13.526 13.526 0 0 0 1 12s4 8 11 8a9.74 9.74 0 0 0 5-1.26"></path><line x1="2" y1="2" x2="22" y2="22"></line></svg>`;
-    }
+    const isHidden = passwordInput.type === "password";
+    passwordInput.type = isHidden ? "text" : "password";
+    togglePassword.innerHTML = isHidden
+      ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 11 8 11 8a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61A13.526 13.526 0 0 0 1 12s4 8 11 8a9.74 9.74 0 0 0 5-1.26"></path><line x1="2" y1="2" x2="22" y2="22"></line></svg>`
+      : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
   });
 
   loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     clearLoginError();
-    const formData = new FormData(e.target);
-    const data = Object.fromEntries(formData.entries());
-
+    const data = Object.fromEntries(new FormData(e.target).entries());
     try {
-      const res = await fetch("/api/auth/login", {
+      const res    = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-
       const result = await res.json();
-
       if (res.ok) {
-        if (isAdminLogin) {
-          if (result.role === "admin") {
-            window.location.href = "/admin";
-          } else {
-            isAdminLogin = false;
-            showLoginError("Access Denied: You are not an admin.");
-          }
-        } else {
-          window.location.href = result.role === "admin" ? "/admin" : "/";
-        }
+        window.location.href = result.role === "admin" ? "/admin" : "/";
       } else {
-        isAdminLogin = false;
         showLoginError(result.message || "Login failed. Please try again.");
       }
     } catch (err) {
-      console.error(err);
-      isAdminLogin = false;
       showLoginError("Network error. Please check your connection.");
     }
   });
-</script>
 
+  /* ── Admin modal ── */
+  const adminModal       = document.getElementById("adminModal");
+  const adminTrigger     = document.getElementById("adminTrigger");
+  const adminClose       = document.getElementById("adminClose");
+  const adminLoginForm   = document.getElementById("adminLoginForm");
+  const adminErrorDiv    = document.getElementById("adminError");
+
+  function openAdminModal() {
+    adminModal.classList.add("open");
+    document.getElementById("adminUsername").focus();
+  }
+  function closeAdminModal() {
+    adminModal.classList.remove("open");
+    adminErrorDiv.style.display = "none";
+    adminLoginForm.reset();
+  }
+
+  adminTrigger.addEventListener("click", openAdminModal);
+  adminClose.addEventListener("click", closeAdminModal);
+  adminModal.addEventListener("click", (e) => {
+    if (e.target === adminModal) closeAdminModal();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeAdminModal();
+  });
+
+  /* Password visibility toggle (admin) */
+  const toggleAdminPwd = document.getElementById("toggleAdminPassword");
+  const adminPwdInput  = document.getElementById("adminPassword");
+  toggleAdminPwd.addEventListener("click", () => {
+    const isHidden = adminPwdInput.type === "password";
+    adminPwdInput.type = isHidden ? "text" : "password";
+    toggleAdminPwd.innerHTML = isHidden
+      ? `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 11 8 11 8a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61A13.526 13.526 0 0 0 1 12s4 8 11 8a9.74 9.74 0 0 0 5-1.26"></path><line x1="2" y1="2" x2="22" y2="22"></line></svg>`
+      : `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+  });
+
+  adminLoginForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    adminErrorDiv.style.display = "none";
+    const data = Object.fromEntries(new FormData(e.target).entries());
+    try {
+      const res    = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const result = await res.json();
+      if (res.ok) {
+        if (result.role === "admin") {
+          window.location.href = "/admin";
+        } else {
+          adminErrorDiv.textContent = "Access Denied: This account is not an admin.";
+          adminErrorDiv.style.display = "block";
+        }
+      } else {
+        adminErrorDiv.textContent = result.message || "Login failed.";
+        adminErrorDiv.style.display = "block";
+      }
+    } catch (err) {
+      adminErrorDiv.textContent = "Network error. Please check your connection.";
+      adminErrorDiv.style.display = "block";
+    }
+  });
+</script>
 
 <%- include('partials/footer') %>
