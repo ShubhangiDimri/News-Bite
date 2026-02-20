@@ -80,7 +80,10 @@
 <style>
 .search-section {
     margin-bottom: 2rem;
-    padding: 2rem;
+    padding: 2.5rem;
+    border-radius: 1.5rem;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
 }
 
 .search-form {
@@ -96,12 +99,16 @@
 
 .search-input {
     flex: 1;
+    font-size: 1.1rem;
+    padding: 1rem 1.5rem;
 }
 
 .search-filters {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
+    gap: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--glass-border);
 }
 
 .filter-group {
@@ -111,20 +118,44 @@
 }
 
 .filter-group label {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 .section-title {
-    margin-bottom: 1.5rem;
-    color: var(--text-primary);
+    margin: 3rem 0 1.5rem;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.news-meta {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.news-date {
+    color: var(--text-muted);
 }
 
 .no-results {
     text-align: center;
-    padding: 3rem;
-    color: var(--text-secondary);
+    padding: 5rem 2rem;
+    color: var(--text-muted);
     grid-column: 1 / -1;
+    background: var(--glass-bg);
+    border-radius: 1rem;
+    border: 1px dashed var(--glass-border);
+}
+
+.no-results p {
+    font-size: 1.25rem;
 }
 </style>
 

@@ -1,9 +1,12 @@
 :root {
   /* Dark theme (default) */
-  --primary-color: #10b981; /* Teal/Green */
+  --primary-color: #10b981;
+  /* Teal/Green */
   --primary-hover: #059669;
-  --background-color: #111827; /* Dark Blue-Grey */
-  --glass-bg: rgba(31, 41, 55, 0.7); /* Semi-transparent dark */
+  --background-color: #111827;
+  /* Dark Blue-Grey */
+  --glass-bg: rgba(31, 41, 55, 0.7);
+  /* Semi-transparent dark */
   --glass-border: rgba(255, 255, 255, 0.1);
   --text-main: #f3f4f6;
   --text-muted: #9ca3af;
@@ -14,14 +17,20 @@
 
 /* Light theme */
 [data-theme="light"] {
-  --primary-color: #10b981; /* Green to match dark theme */
-  --primary-hover: #059669;
-  --background-color: #fafbfc; /* Soft off-white */
-  --glass-bg: rgba(255, 255, 255, 0.85); /* Elegant glass effect */
-  --glass-border: rgba(16, 185, 129, 0.15); /* Subtle green border */
-  --text-main: #1e293b; /* Rich dark blue-grey */
-  --text-muted: #64748b;
-  --shadow-glass: 0 8px 25px 0 rgba(16, 185, 129, 0.12);
+  --primary-color: #059669;
+  /* Slightly deeper green for better contrast */
+  --primary-hover: #047857;
+  --background-color: #f8fafc;
+  /* Cleaner white */
+  --glass-bg: rgba(255, 255, 255, 0.96);
+  /* More opaque */
+  --glass-border: rgba(16, 185, 129, 0.2);
+  /* Sharper border */
+  --text-main: #0f172a;
+  /* Darker text for readability */
+  --text-muted: #475569;
+  /* Better contrast for muted text */
+  --shadow-glass: 0 10px 30px -5px rgba(16, 185, 129, 0.1);
 }
 
 /* Light theme beautiful gradient background */
@@ -40,8 +49,8 @@
   width: 100%;
   height: 100%;
   background: radial-gradient(circle at 25% 25%, rgba(16, 185, 129, 0.08) 0%, transparent 50%),
-              radial-gradient(circle at 75% 75%, rgba(59, 130, 246, 0.06) 0%, transparent 50%),
-              radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.04) 0%, transparent 50%);
+    radial-gradient(circle at 75% 75%, rgba(59, 130, 246, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.04) 0%, transparent 50%);
   pointer-events: none;
   z-index: -1;
 }
@@ -128,13 +137,15 @@
   color: #10b981;
 }
 
-[data-theme="light"] input, [data-theme="light"] textarea {
+[data-theme="light"] input,
+[data-theme="light"] textarea {
   background: rgba(255, 255, 255, 0.8);
   border: 1px solid rgba(16, 185, 129, 0.2);
   color: #1e293b;
 }
 
-[data-theme="light"] input:focus, [data-theme="light"] textarea:focus {
+[data-theme="light"] input:focus,
+[data-theme="light"] textarea:focus {
   border-color: #10b981;
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
 }
@@ -153,11 +164,9 @@
 body {
   font-family: var(--font-sans);
   background-color: var(--background-color);
-  background-image: radial-gradient(
-      at 0% 0%,
+  background-image: radial-gradient(at 0% 0%,
       rgba(16, 185, 129, 0.15) 0px,
-      transparent 50%
-    ),
+      transparent 50%),
     radial-gradient(at 100% 0%, rgba(59, 130, 246, 0.15) 0px, transparent 50%);
   background-attachment: fixed;
   color: var(--text-main);
@@ -414,19 +423,15 @@ select.form-input option {
 }
 
 .login-half {
-  background: linear-gradient(
-    135deg,
-    rgba(16, 185, 129, 0.05) 0%,
-    rgba(31, 41, 55, 0.8) 100%
-  );
+  background: linear-gradient(135deg,
+      rgba(16, 185, 129, 0.05) 0%,
+      rgba(31, 41, 55, 0.8) 100%);
 }
 
 .register-half {
-  background: linear-gradient(
-    135deg,
-    rgba(59, 130, 246, 0.05) 0%,
-    rgba(31, 41, 55, 0.8) 100%
-  );
+  background: linear-gradient(135deg,
+      rgba(59, 130, 246, 0.05) 0%,
+      rgba(31, 41, 55, 0.8) 100%);
 }
 
 .auth-content {
@@ -468,12 +473,10 @@ select.form-input option {
 .divider-line {
   width: 1px;
   flex: 1;
-  background: linear-gradient(
-    to bottom,
-    transparent,
-    var(--glass-border),
-    transparent
-  );
+  background: linear-gradient(to bottom,
+      transparent,
+      var(--glass-border),
+      transparent);
 }
 
 .divider-text {
@@ -504,12 +507,10 @@ select.form-input option {
     width: auto;
     flex: 1;
     height: 1px;
-    background: linear-gradient(
-      to right,
-      transparent,
-      var(--glass-border),
-      transparent
-    );
+    background: linear-gradient(to right,
+        transparent,
+        var(--glass-border),
+        transparent);
   }
 
   .divider-text {
@@ -607,9 +608,16 @@ select.form-input option {
 .news-actions {
   display: flex;
   gap: 0.5rem;
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.05);
+  /* Lighter by default */
   padding: 0.5rem;
   border-radius: 1rem;
+}
+
+[data-theme="light"] .news-actions {
+  background: rgba(16, 185, 129, 0.04);
+  /* Subtle green tint for light mode */
+  border: 1px solid rgba(16, 185, 129, 0.1);
 }
 
 .action-btn {
@@ -690,9 +698,21 @@ select.form-input option {
 
 .comment-item {
   font-size: 0.85rem;
-  background: rgba(255, 255, 255, 0.03);
-  padding: 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 0.75rem 1rem;
   border-radius: 0.75rem;
+  transition: all 0.2s;
+}
+
+[data-theme="light"] .comment-item {
+  background: rgba(16, 185, 129, 0.02);
+  border-color: rgba(16, 185, 129, 0.08);
+}
+
+.comment-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateX(2px);
 }
 
 .comment-user {
@@ -797,6 +817,7 @@ select.form-input option {
   color: #4ade80;
   background: rgba(74, 222, 128, 0.12);
 }
+
 .upvote-btn.active svg {
   fill: #4ade80;
   stroke: #4ade80;
@@ -807,6 +828,7 @@ select.form-input option {
   color: #f87171;
   background: rgba(248, 113, 113, 0.12);
 }
+
 .downvote-btn.active svg {
   fill: #f87171;
   stroke: #f87171;
@@ -824,8 +846,14 @@ select.form-input option {
   text-align: center;
   color: var(--text-muted);
 }
-.vote-count.up   { color: #4ade80; }
-.vote-count.down { color: #f87171; }
+
+.vote-count.up {
+  color: #4ade80;
+}
+
+.vote-count.down {
+  color: #f87171;
+}
 
 .vote-score {
   font-size: 0.9rem;
@@ -885,7 +913,8 @@ select.form-input option {
 
 /* Search Section Spacing */
 .search-section {
-  margin-top: 4rem; /* Added spacing from top */
+  margin-top: 4rem;
+  /* Added spacing from top */
   margin-bottom: 2rem;
   padding: 2rem;
   border-radius: var(--radius);
@@ -902,9 +931,11 @@ select.form-input option {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.75rem; /* Increased padding */
+  padding: 0.75rem;
+  /* Increased padding */
   border-radius: 0.75rem;
-  font-size: 1.1rem; /* Increased icon size */
+  font-size: 1.1rem;
+  /* Increased icon size */
   transition: all 0.2s;
 }
 
@@ -945,5 +976,6 @@ select.form-input option {
   display: flex;
   gap: 0.5rem;
   margin-bottom: 1rem;
-  margin-top: 1.5rem; /* Added spacing above input */
+  margin-top: 1.5rem;
+  /* Added spacing above input */
 }
