@@ -111,6 +111,31 @@ exports.login = async (req, res) => {
             return res.status(401).json({ message: "Invalid credentials" });
         }
 
+        // 🛡️ STRICT GATEKEEPER: Enforce role-based login separation
+        const loginType = req.body.role; // Must be explicitly 'user' or 'admin'
+        logger.info(`GATEKEEPER: Trying to log in as '${user.role}' via '${loginType}' portal. User: ${username}`);
+        
+        // 1. If trying to use Admin Portal but not an Admin
+        if (loginType === 'admin' && user.role !== 'admin') {
+            logger.warn(`SECURITY: Non-admin '${username}' tried to access Admin Portal.`);
+            return res.status(403).json({ 
+                message: "Access Denied: This portal is for Administrators only." 
+            });
+        }
+        
+        // 2. If an Admin is trying to use the Standard User login (common mistake)
+        if (loginType === 'user' && user.role === 'admin') {
+            logger.warn(`SECURITY: Admin '${username}' tried to log in through standard form.`);
+            return res.status(403).json({ 
+                message: "Security Protocol: Administrators must use the dedicated Admin Portal (floating icon)." 
+            });
+        }
+        
+        // 3. Fallback for any missing/malformed role in request
+        if (!loginType || (loginType !== 'user' && loginType !== 'admin')) {
+             return res.status(400).json({ message: "Invalid login context." });
+        }
+
         const token = generateToken(user._id);
         setAuthCookie(res, token);
 

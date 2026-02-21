@@ -30,20 +30,18 @@
     overflow: hidden;
   "
 >
-  <div
-    class="logo"
-    style="justify-content: center; font-size: 2.5rem; margin-bottom: 1.5rem"
-  >
-    <span>⚡</span> NewsBite
+  <div class="logo" style="justify-content: center; font-size: 2.5rem; margin-bottom: 2rem;">
+    <svg class="logo-icon" style="width: 1.2em; height: 1.2em;"><use href="#logo-lightning"></use></svg>
+    <span class="logo-text">NewsBite</span>
   </div>
 
-  <div class="auth-card" style="max-width: 420px; width: 100%; padding: 2rem">
-    <h1 class="auth-title" style="margin-bottom: 1.5rem; font-size: 1.75rem">
+  <div class="auth-card" style="max-width: 420px; width: 100%; padding: 2.5rem; border-radius: 1.5rem;">
+    <h1 class="auth-title" style="margin-bottom: 2rem; font-size: 2rem; text-align: center;">
       Create Account
     </h1>
     <form id="registerForm">
-      <div class="form-group" style="margin-bottom: 1rem">
-        <label for="username" class="form-label">Username</label>
+      <div class="form-group" style="margin-bottom: 1.5rem">
+        <label for="username" class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Username</label>
         <input
           type="text"
           id="username"
@@ -53,8 +51,8 @@
         />
         <div id="usernameError" style="color:#f87171; font-size:0.8rem; margin-top:0.3rem; display:none;"></div>
       </div>
-      <div class="form-group" style="margin-bottom: 1rem">
-        <label for="password" class="form-label">Password</label>
+      <div class="form-group" style="margin-bottom: 1.5rem">
+        <label for="password" class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Password</label>
         <div style="position: relative">
           <input
             type="password"
@@ -109,16 +107,19 @@
         type="submit"
         id="submitBtn"
         class="btn btn-primary"
-        style="width: 100%; margin-top: 1rem"
+        style="width: 100%; padding: 0.85rem; font-size: 1rem; font-weight: 600; margin-top: 1rem"
       >
         Sign Up
       </button>
     </form>
-    <div class="auth-footer" style="margin-top: 1.5rem">
-      Already have an account? <a href="/login">Login</a>
+    <div class="auth-footer" style="margin-top: 2rem; text-align: center; color: var(--text-muted);">
+      Already have an account? <a href="/login" style="color: var(--primary-color); font-weight: 600; text-decoration: none;">Login</a>
     </div>
   </div>
 </div>
+
+<%- include('partials/adminLogin') %>
+
 
 <script>
   const togglePassword  = document.getElementById("togglePassword");
@@ -230,7 +231,7 @@
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, password, role: 'user' }),
       });
 
       const result = await res.json();

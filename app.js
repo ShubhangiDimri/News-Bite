@@ -1,5 +1,6 @@
 require("dotenv").config();
 const express = require("express");
+const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const connectDB = require("./database/DatabaseConnection");
@@ -10,14 +11,26 @@ const adminRoutes = require('./routes/adminRoutes')
 const requestLogger = require("./middlewares/requestLogger");
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 
-// ✅ Connect to Database
-connectDB();
+// ✅ Trust Proxy for cloud deployments (Render, Railway, etc.)
+app.set("trust proxy", 1);
+
+// ✅ Connect to Database and Auto-Fetch if empty
+const News = require("./models/News");
+const { fetchAndStoreOnce } = require("./services/newsFetcher");
+
+connectDB().then(async () => {
+  const count = await News.countDocuments();
+  if (count === 0) {
+    console.log("📭 Database is empty. Auto-fetching initial news...");
+    await fetchAndStoreOnce();
+  }
+});
 
 // ✅ Enable CORS before defining routes
 app.use(cors({
-  origin: "http://127.0.0.1:5500", // your frontend URL
+  origin: process.env.CLIENT_ORIGIN || "http://localhost:5500", // Fallback for local development
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));
@@ -29,10 +42,9 @@ app.use(cookieParser());
 
 // ✅ Middleware
 app.use(requestLogger);
+app.use(helmet()); // Production security headers
 
 // ✅ Routes
-
-
 const viewRoutes = require('./routes/viewRoutes');
 
 app.set('view engine', 'ejs');
@@ -44,6 +56,20 @@ app.use('/api/auth',  authRoutes);
 app.use('/api/news',  newsRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes)
+
+// ✅ Global Error Handler (Keep this last)
+app.use((err, req, res, next) => {
+  console.error('🔥 Global Error:', err.message);
+  res.status(500).render('index', { 
+    title: 'Error - NewsBite',
+    news: [], 
+    totalPages: 0, 
+    currentPage: 1, 
+    user: req.user,
+    error: "Something went wrong. Please try again later."
+  });
+});
+
 
 // ✅ Start Server
 app.listen(PORT, () => {

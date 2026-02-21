@@ -11,37 +11,25 @@
     border-bottom: 1px solid var(--glass-border);
   "
 >
-  <div class="logo">
-    <svg
-      width="28"
-      height="28"
-      viewBox="0 0 24 24"
-      fill="#3b82f6"
-      style="flex-shrink: 0"
-    >
-      <path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z" />
-    </svg>
+  <a href="/" class="logo">
+    <svg class="logo-icon"><use href="#logo-lightning"></use></svg>
+    <span class="logo-text" style="font-size: 1.6rem;">NewsBite</span>
     <span
       style="
-        background: linear-gradient(to right, #3b82f6, #10b981);
-        -webkit-background-clip: text;
-        background-clip: text;
-        -webkit-text-fill-color: transparent;
-      "
-      >NewsBite</span
-    >
-    <span
-      style="
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         background: rgba(59, 130, 246, 0.2);
         color: #3b82f6;
-        padding: 0.2rem 0.5rem;
+        padding: 0.1rem 0.4rem;
         border-radius: 1rem;
         border: 1px solid rgba(59, 130, 246, 0.3);
+        margin-left: -0.2rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
       "
       >Admin</span
     >
-  </div>
+  </a>
   <div style="display: flex; align-items: center; gap: 1rem;">
     <!-- Theme Toggle — identical to navbar.ejs, handled by main.js -->
     <button class="theme-toggle" id="themeToggle" title="Toggle theme">
