@@ -196,7 +196,8 @@ exports.logout = async (req, res) => {
         logger.info(`User logged out successfully`, { userId, username });
         
         // Handle both API and View requests
-        if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+        const acceptHeader = req.headers.accept || '';
+        if (req.xhr || acceptHeader.indexOf('json') > -1) {
             return res.json({ message: "Logout successful" });
         } else {
             return res.redirect('/');

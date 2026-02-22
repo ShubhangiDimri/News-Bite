@@ -1150,7 +1150,10 @@
     try {
       const res = await fetch('/api/auth/logout', { 
         method: 'POST',
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json'
+        }
       });
       if (res.ok) {
         window.location.href = '/';
