@@ -42,7 +42,17 @@ app.use(cookieParser());
 
 // ✅ Middleware
 app.use(requestLogger);
-app.use(helmet()); // Production security headers
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],  // Allow inline scripts
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "https:"],
+    },
+  },
+})); // Production security headers
 
 // ✅ Routes
 const viewRoutes = require('./routes/viewRoutes');
