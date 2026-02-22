@@ -445,12 +445,17 @@
     <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem">
       Registration Trends (Last 30 Days)
     </h2>
-    <div style="height: 300px; width: 100%">
-      <canvas id="registrationChart"></canvas>
+    <div style="height: 300px; width: 100%; position: relative;">
+      <canvas id="registrationChart" style="width: 100%; height: 100%;"></canvas>
     </div>
   </div>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </div>
+
+<script>
+  // Store registration stats for chart initialization
+  window.registrationStatsData = <%- JSON.stringify(registrationStats || []) %>;
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 
 <!-- Activity Modal -->
 <div
@@ -798,18 +803,36 @@
   }
 
   // Initialize Chart.js
-  document.addEventListener('DOMContentLoaded', () => {
-    const registrationStats = <%- JSON.stringify(registrationStats || []) %>;
+  let chartRetryCount = 0;
+  function initializeChart() {
+    const registrationStats = window.registrationStatsData || [];
 
-    if (registrationStats.length > 0) {
-      const ctx = document.getElementById('registrationChart').getContext('2d');
+    if (typeof Chart === 'undefined') {
+      chartRetryCount++;
+      if (chartRetryCount < 50) {
+        console.error('Chart.js not loaded, retrying... (' + chartRetryCount + ')');
+        setTimeout(initializeChart, 200);
+      } else {
+        console.error('Chart.js failed to load after 50 retries');
+      }
+      return;
+    }
 
-      // Create gradient
-      const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-      gradient.addColorStop(0, 'rgba(59, 130, 246, 0.5)');
-      gradient.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
+    console.log('Chart.js loaded successfully, initializing chart...');
+    const canvas = document.getElementById('registrationChart');
+    if (!canvas) {
+      console.error('Chart canvas not found');
+      return;
+    }
 
-      new Chart(ctx, {
+    const ctx = canvas.getContext('2d');
+
+    // Create gradient
+    const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+    gradient.addColorStop(0, 'rgba(59, 130, 246, 0.5)');
+    gradient.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
+
+    new Chart(ctx, {
         type: 'line',
         data: {
           labels: registrationStats.map(s => {
@@ -861,8 +884,14 @@
           }
         }
       });
-    }
-  });
+  }
+
+  // Initialize chart when page fully loads
+  if (document.readyState === 'complete') {
+    initializeChart();
+  } else {
+    window.addEventListener('load', initializeChart);
+  }
 
   let currentSuspendUserId = null;
 
