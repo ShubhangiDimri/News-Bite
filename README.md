@@ -1,6 +1,5 @@
-<div align="center">
-  <img src="assets/logo.png" alt="NewsBite Logo" width="120" />
-  <h1>⚡ NewsBite</h1>
+
+  <h1> NewsBite</h1>
   <p><strong>Bite-Sized News for the Modern Reader</strong></p>
 
   [![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
